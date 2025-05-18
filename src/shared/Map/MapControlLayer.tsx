@@ -40,6 +40,28 @@ const MapControlLayer = () => {
 		dispatch(figuresSlice.actions.startAddingFigure('polygon'))
 	}
 
+	const packageDataToDownload = data => {
+		// Преобразуем данные в JSON строку
+		const jsonString = JSON.stringify(data, null, 2)
+
+		// Создаем Blob объект
+		const blob = new Blob([jsonString], { type: 'application/json' })
+
+		// Создаем URL для Blob
+		const url = URL.createObjectURL(blob)
+
+		// Создаем временную ссылку и имитируем клик
+		const link = document.createElement('a')
+		link.href = url
+		link.download = 'data.json' // Имя файла
+		document.body.appendChild(link)
+		link.click()
+
+		// Убираем ссылку и освобождаем память
+		document.body.removeChild(link)
+		URL.revokeObjectURL(url)
+	}
+
 	function buildSafetyGraph(
 		grid: Grid,
 		path: GridCoordinate[]
@@ -341,6 +363,8 @@ const MapControlLayer = () => {
 						)
 					}
 				})
+
+				packageDataToDownload({ nodes, edges })
 
 				// Путь
 				dispatch(
