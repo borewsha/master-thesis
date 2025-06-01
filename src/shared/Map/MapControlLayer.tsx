@@ -423,7 +423,7 @@ const MapControlLayer = () => {
 				const newGrid = createExpandedGrid(grid, points)
 				console.log('newGrid', newGrid)
 
-				packageDataToDownload({ path, gridAroundPath: newGrid })
+				packageDataToDownload({ pathPoints: points, gridAroundPath: newGrid })
 
 				// const newGridWay = getGridPerimeter(newGrid)
 				// console.log('newGridWay', newGridWay)
