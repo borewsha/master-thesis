@@ -7,14 +7,16 @@ import { store } from '@/store'
 
 const Home = () => {
 	const Map = dynamic(() => import('@/shared/Map/Map'), { ssr: false })
-	const [location, setLocation] = useState<GeolocationPosition>()
+	const [location, setLocation] = useState<GeolocationPosition>({
+		coords: { latitude: 55.321725, longitude: 11.042428 }
+	})
 
-	useEffect(() => {
-		navigator.geolocation.getCurrentPosition(location => {
-			console.debug(location)
-			setLocation(location)
-		})
-	}, [])
+	// useEffect(() => {
+	// 	navigator.geolocation.getCurrentPosition(location => {
+	// 		console.debug(location)
+	// 		setLocation(location)
+	// 	})
+	// }, [])
 
 	return (
 		<Provider store={store}>

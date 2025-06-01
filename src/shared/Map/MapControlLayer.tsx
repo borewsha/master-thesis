@@ -139,7 +139,7 @@ const MapControlLayer = () => {
 			}
 		}
 
-		console.log('nodes filled', nodes)
+		// console.log('nodes filled', nodes)
 
 		const pathLen = path.length - 1
 
@@ -181,7 +181,7 @@ const MapControlLayer = () => {
 			edges.push({ from: nodes[i].id, to: nodes[nodes.length - 1].id })
 		}
 
-		console.log('edges filled', edges)
+		// console.log('edges filled', edges)
 
 		return {
 			nodes,
@@ -265,8 +265,8 @@ const MapControlLayer = () => {
 	}
 
 	const fillGridPoints = (grid: Grid, size: number) => {
-		for (let i = -size + 1; i < size * 2; i++) {
-			for (let j = -size + 1; j < size; j++) {
+		for (let i = -size; i < size * 2; i++) {
+			for (let j = -size; j < size; j++) {
 				const position = grid[i + size][j + size].position
 
 				const ins = figures
@@ -277,14 +277,106 @@ const MapControlLayer = () => {
 				grid[i + size][j + size].weight = isInside ? -1 : 0
 
 				// Распечатка сетки
-				// dispatch(
-				// 	figuresSlice.actions.addPointToCurrentFigure({
-				// 		position,
-				// 		isFree: !isInside
-				// 	})
-				// )
+				dispatch(
+					figuresSlice.actions.addPointToCurrentFigure({
+						position,
+						isFree: !isInside
+					})
+				)
 			}
 		}
+	}
+
+	function createExpandedGrid(originalGrid, path) {
+		if (path.length === 0) return originalGrid
+
+		// Находим минимальные и максимальные координаты пути
+		let minLat = path[0].position.lat
+		let maxLat = path[0].position.lat
+		let minLng = path[0].position.lng
+		let maxLng = path[0].position.lng
+
+		for (const point of path) {
+			minLat = Math.min(minLat, point.position.lat)
+			maxLat = Math.max(maxLat, point.position.lat)
+			minLng = Math.min(minLng, point.position.lng)
+			maxLng = Math.max(maxLng, point.position.lng)
+		}
+
+		// Находим индексы крайних точек в оригинальной сетке
+		let minRowIndex = originalGrid.length - 1
+		let maxRowIndex = 0
+		let minColIndex = originalGrid[0].length - 1
+		let maxColIndex = 0
+
+		for (let i = 0; i < originalGrid.length; i++) {
+			for (let j = 0; j < originalGrid[i].length; j++) {
+				const cell = originalGrid[i][j]
+				if (
+					cell.position.lat >= minLat &&
+					cell.position.lat <= maxLat &&
+					cell.position.lng >= minLng &&
+					cell.position.lng <= maxLng
+				) {
+					minRowIndex = Math.min(minRowIndex, i)
+					maxRowIndex = Math.max(maxRowIndex, i)
+					minColIndex = Math.min(minColIndex, j)
+					maxColIndex = Math.max(maxColIndex, j)
+				}
+			}
+		}
+
+		// Расширяем область на 1 клетку в каждую сторону
+		const expandedMinRow = Math.max(0, minRowIndex - 1)
+		const expandedMaxRow = Math.min(originalGrid.length - 1, maxRowIndex + 1)
+		const expandedMinCol = Math.max(0, minColIndex - 1)
+		const expandedMaxCol = Math.min(originalGrid[0].length - 1, maxColIndex + 1)
+
+		// Создаем новую сетку
+		const newGrid = []
+		for (let i = expandedMinRow; i <= expandedMaxRow; i++) {
+			const row = []
+			for (let j = expandedMinCol; j <= expandedMaxCol; j++) {
+				row.push({ ...originalGrid[i][j] })
+			}
+			newGrid.push(row)
+		}
+
+		return newGrid
+	}
+
+	function getGridPerimeter(grid) {
+		if (grid.length === 0 || grid[0].length === 0) return []
+
+		const perimeter = []
+		const rows = grid.length
+		const cols = grid[0].length
+
+		// Верхняя граница (слева направо)
+		for (let j = 0; j < cols; j++) {
+			perimeter.push({ ...grid[0][j].position })
+		}
+
+		// Правая граница (сверху вниз, исключая первый элемент)
+		for (let i = 1; i < rows; i++) {
+			perimeter.push({ ...grid[i][cols - 1].position })
+		}
+
+		// Нижняя граница (справа налево, если есть более 1 строки, исключая первый элемент)
+		if (rows > 1) {
+			for (let j = cols - 2; j >= 0; j--) {
+				perimeter.push({ ...grid[rows - 1][j].position })
+			}
+		}
+
+		// Левая граница (снизу вверх, если есть более 1 столбца, исключая первый и последний элементы)
+		if (cols > 1) {
+			for (let i = rows - 2; i > 0; i--) {
+				perimeter.push({ ...grid[i][0].position })
+			}
+		}
+
+		return perimeter
 	}
 
 	const createGridHandler = () => {
@@ -292,15 +384,17 @@ const MapControlLayer = () => {
 
 		for (const f of figures) {
 			if (f.type === 'polyline') {
-				const n = 10
+				// Для лучшего результата - от 20 => 100
+				const n = 20
 				const grid = generateGrid(n, f)
+				// console.log(grid)
 				fillGridPoints(grid, n)
 
 				// const graph = buildNavigationGraph(grid, [n, n], [n * 2 - 1, n], 5)
 				// console.log(graph)
 
-				const path = leeAlgorithm(grid, [n, n], [n * 2 - 1, n])
-				console.log('path', path)
+				const path = leeAlgorithm([...grid], [n, n], [n * 2 - 1, n])
+				// console.log('path', path)
 				if (path.length === 0) {
 					console.error('Path not found')
 					continue
@@ -313,7 +407,42 @@ const MapControlLayer = () => {
 					isFree: true
 				}))
 
-				console.log('POINTS: ', points)
+				// Путь
+				dispatch(
+					figuresSlice.actions.addFigure({
+						id: uuid(),
+						type: 'way',
+						isSelected: false,
+						points
+					})
+				)
+
+				console.log('grid', grid)
+				console.log('points', points)
+
+				const newGrid = createExpandedGrid(grid, points)
+				console.log('newGrid', newGrid)
+
+				packageDataToDownload(newGrid)
+
+				// const newGridWay = getGridPerimeter(newGrid)
+				// console.log('newGridWay', newGridWay)
+
+				// графница сетки
+				// dispatch(
+				// 	figuresSlice.actions.addFigure({
+				// 		id: uuid(),
+				// 		type: 'way',
+				// 		isSelected: false,
+				// 		points: newGridWay.map(a => ({
+				// 			position: a,
+				// 			id: uuid(),
+				// 			isFree: true
+				// 		}))
+				// 	})
+				// )
+
+				// console.log('POINTS: ', points)
 
 				// Строим граф безопасности
 				const { nodes, edges, corridor } = buildSafetyGraph(grid, path)
@@ -325,16 +454,16 @@ const MapControlLayer = () => {
 							position: node.position
 						}) as Point
 				)
-				dispatch(
-					figuresSlice.actions.addFigure({
-						id: uuid(),
-						type: 'grid',
-						isSelected: false,
-						points: nodesPoints
-					})
-				)
+				// dispatch(
+				// 	figuresSlice.actions.addFigure({
+				// 		id: uuid(),
+				// 		type: 'grid',
+				// 		isSelected: false,
+				// 		points: nodesPoints
+				// 	})
+				// )
 
-				console.log('nodes', nodes, 'edges', edges, 'corridor', corridor)
+				// console.log('nodes', nodes, 'edges', edges, 'corridor', corridor)
 
 				edges.forEach(({ from, to }) => {
 					const fromNode = nodes.find(node => node.id === from)
@@ -353,28 +482,18 @@ const MapControlLayer = () => {
 							isFree: true
 						} as Point
 
-						dispatch(
-							figuresSlice.actions.addFigure({
-								id: uuid(),
-								type: 'graphEdge',
-								isSelected: false,
-								points: [fromPoint, toPoint]
-							})
-						)
+						// dispatch(
+						// 	figuresSlice.actions.addFigure({
+						// 		id: uuid(),
+						// 		type: 'graphEdge',
+						// 		isSelected: false,
+						// 		points: [fromPoint, toPoint]
+						// 	})
+						// )
 					}
 				})
 
-				packageDataToDownload({ nodes, edges })
-
-				// Путь
-				dispatch(
-					figuresSlice.actions.addFigure({
-						id: uuid(),
-						type: 'way',
-						isSelected: false,
-						points
-					})
-				)
+				// packageDataToDownload({ nodes, edges })
 			}
 		}
 
