@@ -385,7 +385,7 @@ const MapControlLayer = () => {
 		for (const f of figures) {
 			if (f.type === 'polyline') {
 				// Для лучшего результата - от 100
-				const n = 100
+				const n = 20
 				const grid = generateGrid(n, f)
 				// console.log(grid)
 				fillGridPoints(grid, n)
@@ -417,13 +417,45 @@ const MapControlLayer = () => {
 					})
 				)
 
-				console.log('grid', grid)
+				// console.log('grid', grid)
 				console.log('points', points)
 
 				const newGrid = createExpandedGrid(grid, points)
-				console.log('newGrid', newGrid)
+				// console.log('newGrid', newGrid)
 
 				packageDataToDownload({ pathPoints: points, gridAroundPath: newGrid })
+
+				fetch('http://localhost:8000/process_data', {
+					method: 'POST',
+					body: JSON.stringify({ pathPoints: points, gridAroundPath: newGrid })
+				})
+					.then(res => res.json())
+					.then(res => {
+						const data = res.path
+						for (let i = 0; i < newGrid.length; i++) {
+							for (let j = 0; j < newGrid[i].length; j++) {
+								for (let k = 0; k < data.length; k++) {
+									const a = data.find(p => p.id === newGrid[i][j].id)
+									if (a) {
+										newGrid[i][j].weight = a.weight
+									}
+								}
+							}
+						}
+
+						const path = aStarMaxWeight(
+							newGrid,
+							points[0],
+							points[points.length - 1]
+						)
+						dispatch(
+							figuresSlice.actions.addFigure({
+								id: uuid(),
+								type: 'way',
+								points: path
+							})
+						)
+					})
 
 				// const newGridWay = getGridPerimeter(newGrid)
 				// console.log('newGridWay', newGridWay)
@@ -445,15 +477,15 @@ const MapControlLayer = () => {
 				// console.log('POINTS: ', points)
 
 				// Строим граф безопасности
-				const { nodes, edges, corridor } = buildSafetyGraph(grid, path)
-
-				// Путь
-				const nodesPoints = nodes.map(
-					node =>
-						({
-							position: node.position
-						}) as Point
-				)
+				// const { nodes, edges, corridor } = buildSafetyGraph(grid, path)
+				//
+				// // Путь
+				// const nodesPoints = nodes.map(
+				// 	node =>
+				// 		({
+				// 			position: node.position
+				// 		}) as Point
+				// )
 				// dispatch(
 				// 	figuresSlice.actions.addFigure({
 				// 		id: uuid(),
@@ -465,33 +497,33 @@ const MapControlLayer = () => {
 
 				// console.log('nodes', nodes, 'edges', edges, 'corridor', corridor)
 
-				edges.forEach(({ from, to }) => {
-					const fromNode = nodes.find(node => node.id === from)
-					const toNode = nodes.find(node => node.id === to)
-
-					if (fromNode?.position && toNode?.position) {
-						const fromPoint = {
-							position: fromNode.position,
-							id: from,
-							isFree: true
-						} as Point
-
-						const toPoint = {
-							position: toNode.position,
-							id: to,
-							isFree: true
-						} as Point
-
-						// dispatch(
-						// 	figuresSlice.actions.addFigure({
-						// 		id: uuid(),
-						// 		type: 'graphEdge',
-						// 		isSelected: false,
-						// 		points: [fromPoint, toPoint]
-						// 	})
-						// )
-					}
-				})
+				// edges.forEach(({ from, to }) => {
+				// 	const fromNode = nodes.find(node => node.id === from)
+				// 	const toNode = nodes.find(node => node.id === to)
+				//
+				// 	if (fromNode?.position && toNode?.position) {
+				// 		const fromPoint = {
+				// 			position: fromNode.position,
+				// 			id: from,
+				// 			isFree: true
+				// 		} as Point
+				//
+				// 		const toPoint = {
+				// 			position: toNode.position,
+				// 			id: to,
+				// 			isFree: true
+				// 		} as Point
+				//
+				// 		// dispatch(
+				// 		// 	figuresSlice.actions.addFigure({
+				// 		// 		id: uuid(),
+				// 		// 		type: 'graphEdge',
+				// 		// 		isSelected: false,
+				// 		// 		points: [fromPoint, toPoint]
+				// 		// 	})
+				// 		// )
+				// 	}
+				// })
 
 				// packageDataToDownload({ nodes, edges })
 			}

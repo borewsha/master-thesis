@@ -1,6 +1,7 @@
 import { Figure } from '@/figures.slice'
 import { LatLng } from 'leaflet'
 import { Grid } from '@/entity/grid/types'
+import { v4 as uuid } from 'uuid'
 
 export const generateGrid = (size: number, figure: Figure): Grid => {
 	const start = figure.points[0].position
@@ -36,7 +37,7 @@ export const generateGrid = (size: number, figure: Figure): Grid => {
 				lng: start.lng + rotatedY
 			} as LatLng
 
-			return { weight: 0, position }
+			return { weight: 0, position, id: uuid() }
 		})
 	)
 }

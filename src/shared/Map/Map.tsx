@@ -7,6 +7,7 @@ import MapControlLayer from '@/shared/Map/MapControlLayer'
 import { Figure, figuresSlice, FigureType } from '@/figures.slice'
 import { v4 as uuid } from 'uuid'
 import { useAppDispatch } from '@/store'
+import { aStarMaxWeight } from '@/entity/aStar'
 
 interface MapProps {
 	zoom?: number
@@ -26,6 +27,20 @@ export function mapCoordsListToFigures(
 			}))
 		}
 	})
+}
+
+interface Point {
+	weight: number
+	lat: number
+	lng: number
+}
+
+interface Node {
+	point: Point
+	f: number // f = g + h
+	g: number // стоимость пути от старта
+	h: number // эвристическая оценка до цели
+	parent: Node | null
 }
 
 const Map = ({ zoom = 10, location }: MapProps) => {
@@ -49,6 +64,25 @@ const Map = ({ zoom = 10, location }: MapProps) => {
 					dispatch(figuresSlice.actions.addFigure(figure[0]))
 				})
 			)
+		// fetch('/data.json')
+		// 	.then(response => response.json())
+		// 	.then(response => {
+		// 		console.log(
+		// 			aStarMaxWeight(
+		// 				response.path,
+		// 				{
+		// 					lat: 55.339233474507196,
+		// 					lng: 10.987140329923633,
+		// 					weight: 0.699999988079071
+		// 				},
+		// 				{
+		// 					lat: 55.175459404639156,
+		// 					lng: 10.977967296172363,
+		// 					weight: 0.022480923682451248
+		// 				}
+		// 			)
+		// 		)
+		// 	})
 	}, [])
 
 	return (
