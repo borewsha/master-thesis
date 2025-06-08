@@ -8,6 +8,7 @@ import { isPointInPolygon } from '@/entity/grid/lib/isPointInPolygon'
 import * as turf from '@turf/turf'
 import { Grid, GridCoordinate } from '@/entity/grid/types'
 import { LatLng } from 'leaflet'
+import { aStarMaxWeight } from '@/entity/aStar'
 
 interface SafetyGraphNode {
 	id: string
