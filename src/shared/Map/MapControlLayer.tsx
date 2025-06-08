@@ -11,7 +11,7 @@ import { LatLng } from 'leaflet'
 import { aStarMaxWeight } from '@/entity/aStar'
 
 interface ResponseData {
-	path: { id: string; lng: number; lat: number; weight: number }[];
+	path: { id: string; lng: number; lat: number; weight: number }[]
 }
 
 interface SafetyGraphNode {
@@ -436,11 +436,12 @@ const MapControlLayer = () => {
 					body: JSON.stringify({ pathPoints: points, gridAroundPath: newGrid })
 				})
 					.then(res => res.json())
-					.then((res:ResponseData) => {
+					.then((res: ResponseData) => {
 						const data = res.path
 						console.log('data', data)
 						for (let i = 0; i < newGrid.length; i++) {
 							for (let j = 0; j < newGrid[i].length; j++) {
+								newGrid[i][j].weight = 0
 								const a = data.find(p => p.id === newGrid[i][j].id)
 								console.log('a', a)
 								if (a) {
