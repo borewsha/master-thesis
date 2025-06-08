@@ -384,8 +384,8 @@ const MapControlLayer = () => {
 
 		for (const f of figures) {
 			if (f.type === 'polyline') {
-				// Для лучшего результата - от 20 => 100
-				const n = 30
+				// Для лучшего результата - от 100
+				const n = 100
 				const grid = generateGrid(n, f)
 				// console.log(grid)
 				fillGridPoints(grid, n)
