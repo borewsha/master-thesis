@@ -428,6 +428,7 @@ const MapControlLayer = () => {
 
 				fetch('http://localhost:8000/process_data', {
 					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ pathPoints: points, gridAroundPath: newGrid })
 				})
 					.then(res => res.json())
