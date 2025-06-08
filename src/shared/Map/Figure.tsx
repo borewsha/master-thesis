@@ -6,22 +6,29 @@ import { figuresSlice } from '@/figures.slice'
 
 const Figure = ({ figure }) => {
 	const dispatch = useAppDispatch()
+	const colorIndexRef = React.useRef(0)
+	function getRandomHexColor() {
+		const color = colorIndexRef.current % 2 === 0 ? 'green' : 'red'
+		colorIndexRef.current++
+		return color
+	}
 
 	const PolygonView = () => {
 		return (
 			<>
 				{
 					<Polygon
-						positions={figure?.points.map(p => p.position) || []}
+						positions={figure?.points.map((p: any) => p.position) || []}
 						pathOptions={{ color: 'orange' }}
 					/>
 				}
-				{figure?.points.map(p => (
+				{figure?.points.map((p: any) => (
 					<CustomMarker
 						key={p.id}
 						initialPosition={p.position}
 						color='orange'
-						onDrag={e =>
+						onRemove={() => {}}
+						onDrag={(e: any) =>
 							dispatch(
 								figuresSlice.actions.updatePointPosition({
 									figureId: figure.id,
@@ -41,16 +48,17 @@ const Figure = ({ figure }) => {
 			<>
 				{
 					<Polyline
-						positions={figure?.points.map(p => p.position) || []}
+						positions={figure?.points.map((p: any) => p.position) || []}
 						pathOptions={{ color: 'blue' }}
 					/>
 				}
-				{figure?.points.map((p, i) => (
+				{figure?.points.map((p: any, i: number) => (
 					<CustomMarker
 						key={p.id}
 						initialPosition={p.position}
 						color={i === 0 ? 'green' : 'red'}
-						onDrag={e =>
+						onRemove={() => {}}
+						onDrag={(e: any) =>
 							dispatch(
 								figuresSlice.actions.updatePointPosition({
 									figureId: figure.id,
@@ -68,14 +76,15 @@ const Figure = ({ figure }) => {
 	const GridView = () => {
 		return (
 			<>
-				{figure?.points.map(p => (
+				{figure?.points.map((p: any) => (
 					<CustomMarker
 						key={p.id}
 						initialPosition={p.position}
 						color={p.isFree ? 'green' : 'red'}
 						size={10}
 						draggable={false}
-						onDrag={e =>
+						onRemove={() => {}}
+						onDrag={(e: any) =>
 							dispatch(
 								figuresSlice.actions.updatePointPosition({
 									figureId: figure.id,
@@ -93,8 +102,8 @@ const Figure = ({ figure }) => {
 	const WayView = () => {
 		return (
 			<Polyline
-				positions={figure?.points.map(p => p.position) || []}
-				pathOptions={{ color: 'green' }}
+				positions={figure?.points.map((p: any) => p.position) || []}
+				pathOptions={{ color: getRandomHexColor() }}
 			/>
 		)
 	}
@@ -102,7 +111,7 @@ const Figure = ({ figure }) => {
 	const GraphEdge = () => {
 		return (
 			<Polyline
-				positions={figure?.points.map(p => p.position) || []}
+				positions={figure?.points.map((p: any) => p.position) || []}
 				pathOptions={{ color: 'black' }}
 			/>
 		)

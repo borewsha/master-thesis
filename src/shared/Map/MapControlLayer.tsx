@@ -10,6 +10,10 @@ import { Grid, GridCoordinate } from '@/entity/grid/types'
 import { LatLng } from 'leaflet'
 import { aStarMaxWeight } from '@/entity/aStar'
 
+interface ResponseData {
+	path: { id: string; lng: number; lat: number; weight: number }[];
+}
+
 interface SafetyGraphNode {
 	id: string
 	position: LatLng
@@ -386,7 +390,7 @@ const MapControlLayer = () => {
 		for (const f of figures) {
 			if (f.type === 'polyline') {
 				// Для лучшего результата - от 100
-				const n = 20
+				const n = 70
 				const grid = generateGrid(n, f)
 				// console.log(grid)
 				fillGridPoints(grid, n)
@@ -395,7 +399,7 @@ const MapControlLayer = () => {
 				// console.log(graph)
 
 				const path = leeAlgorithm([...grid], [n, n], [n * 2 - 1, n])
-				// console.log('path', path)
+				console.log('path', path)
 				if (path.length === 0) {
 					console.error('Path not found')
 					continue
@@ -404,7 +408,7 @@ const MapControlLayer = () => {
 				// Преобразуем в массив точек
 				const points = path.map(([x, y]) => ({
 					position: grid[x][y].position,
-					id: uuid(),
+					id: grid[x][y].id,
 					isFree: true
 				}))
 
@@ -432,24 +436,25 @@ const MapControlLayer = () => {
 					body: JSON.stringify({ pathPoints: points, gridAroundPath: newGrid })
 				})
 					.then(res => res.json())
-					.then(res => {
+					.then((res:ResponseData) => {
 						const data = res.path
+						console.log('data', data)
 						for (let i = 0; i < newGrid.length; i++) {
 							for (let j = 0; j < newGrid[i].length; j++) {
-								for (let k = 0; k < data.length; k++) {
-									const a = data.find(p => p.id === newGrid[i][j].id)
-									if (a) {
-										newGrid[i][j].weight = a.weight
-									}
+								const a = data.find(p => p.id === newGrid[i][j].id)
+								console.log('a', a)
+								if (a) {
+									newGrid[i][j].weight = a.weight
 								}
 							}
 						}
-
+						console.log('newGrid after fetch', newGrid)
 						const path = aStarMaxWeight(
 							newGrid,
-							points[0],
+							grid[n][n],
 							points[points.length - 1]
 						)
+						console.log('path after fetch', path)
 						dispatch(
 							figuresSlice.actions.addFigure({
 								id: uuid(),
@@ -459,22 +464,22 @@ const MapControlLayer = () => {
 						)
 					})
 
-				// const newGridWay = getGridPerimeter(newGrid)
-				// console.log('newGridWay', newGridWay)
+				const newGridWay = getGridPerimeter(newGrid)
+				console.log('newGridWay', newGridWay)
 
-				// графница сетки
-				// dispatch(
-				// 	figuresSlice.actions.addFigure({
-				// 		id: uuid(),
-				// 		type: 'way',
-				// 		isSelected: false,
-				// 		points: newGridWay.map(a => ({
-				// 			position: a,
-				// 			id: uuid(),
-				// 			isFree: true
-				// 		}))
-				// 	})
-				// )
+				// граница сетки
+				dispatch(
+					figuresSlice.actions.addFigure({
+						id: uuid(),
+						type: 'way',
+						isSelected: false,
+						points: newGridWay.map(a => ({
+							position: a,
+							id: uuid(),
+							isFree: true
+						}))
+					})
+				)
 
 				// console.log('POINTS: ', points)
 
