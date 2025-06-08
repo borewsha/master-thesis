@@ -277,12 +277,12 @@ const MapControlLayer = () => {
 				grid[i + size][j + size].weight = isInside ? -1 : 0
 
 				// Распечатка сетки
-				dispatch(
-					figuresSlice.actions.addPointToCurrentFigure({
-						position,
-						isFree: !isInside
-					})
-				)
+				// dispatch(
+				// 	figuresSlice.actions.addPointToCurrentFigure({
+				// 		position,
+				// 		isFree: !isInside
+				// 	})
+				// )
 			}
 		}
 	}
@@ -385,7 +385,7 @@ const MapControlLayer = () => {
 		for (const f of figures) {
 			if (f.type === 'polyline') {
 				// Для лучшего результата - от 20 => 100
-				const n = 20
+				const n = 30
 				const grid = generateGrid(n, f)
 				// console.log(grid)
 				fillGridPoints(grid, n)

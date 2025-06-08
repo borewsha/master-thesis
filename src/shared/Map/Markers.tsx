@@ -30,9 +30,11 @@ const Markers = () => {
 	return (
 		<>
 			{currentFigure && <Figure figure={currentFigure} />}
-			{figures.map(f => (
-				<Figure key={f.id} figure={f} />
-			))}
+			{figures
+				.filter(f => f.type === 'way')
+				.map(f => (
+					<Figure key={f.id} figure={f} />
+				))}
 		</>
 	)
 }
