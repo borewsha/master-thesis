@@ -6,11 +6,13 @@ import { figuresSlice } from '@/figures.slice'
 
 const Figure = ({ figure }) => {
 	const dispatch = useAppDispatch()
-	const colorIndexRef = React.useRef(0)
-	function getRandomHexColor() {
-		const color = colorIndexRef.current % 2 === 0 ? 'green' : 'red'
-		colorIndexRef.current++
-		return color
+	function getRandomBrightHexColor() {
+		// Генерируем насыщенные компоненты (от 80% до 100%)
+		const r = Math.floor(200 + Math.random() * 55).toString(16)
+		const g = Math.floor(200 + Math.random() * 55).toString(16)
+		const b = Math.floor(200 + Math.random() * 55).toString(16)
+
+		return `#${r}${g}${b}`.replace(/0x/g, '').padEnd(7, '0')
 	}
 
 	const PolygonView = () => {
@@ -103,7 +105,7 @@ const Figure = ({ figure }) => {
 		return (
 			<Polyline
 				positions={figure?.points.map((p: any) => p.position) || []}
-				pathOptions={{ color: getRandomHexColor() }}
+				pathOptions={{ color: getRandomBrightHexColor() }}
 			/>
 		)
 	}
