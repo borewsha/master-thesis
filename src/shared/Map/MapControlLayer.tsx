@@ -431,6 +431,7 @@ const MapControlLayer = () => {
 
 				// packageDataToDownload({ pathPoints: points, gridAroundPath: newGrid })
 
+				const newGridPoints = []
 				fetch('http://localhost:8000/process_data', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
@@ -448,6 +449,7 @@ const MapControlLayer = () => {
 								if (a) {
 									newGrid[i][j].weight = a.weight
 								}
+								newGridPoints.push(a)
 							}
 						}
 						console.log('newGrid after fetch', newGrid)
@@ -455,6 +457,13 @@ const MapControlLayer = () => {
 							newGrid,
 							grid[n][n],
 							points[points.length - 1]
+						)
+						dispatch(
+							figuresSlice.actions.addFigure({
+								id: uuid(),
+								type: 'way',
+								points: newGridPoints
+							})
 						)
 						console.log('path after fetch', path)
 						dispatch(
