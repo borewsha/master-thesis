@@ -115,7 +115,13 @@ const Figure = ({ figure }) => {
 						initialPosition={p.position}
 						color='orange'
 						onRemove={() => {}}
-						popup={'Вес: ' + p.weight}
+						popup={
+							<>
+								<p>Вес: {p.weight}</p>
+								<p>lat: {p.position.lat}</p>
+								<p>lng: {p.position.lng}</p>
+							</>
+						}
 						draggable={false}
 					/>
 				))}
