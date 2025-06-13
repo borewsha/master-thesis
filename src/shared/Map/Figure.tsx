@@ -116,15 +116,7 @@ const Figure = ({ figure }) => {
 						color='orange'
 						onRemove={() => {}}
 						popup={'Вес: ' + p.weight}
-						// onDrag={(e: any) =>
-						// 	dispatch(
-						// 		figuresSlice.actions.updatePointPosition({
-						// 			figureId: figure.id,
-						// 			pointId: p.id,
-						// 			updatedPosition: e.target._latlng
-						// 		})
-						// 	)
-						// }
+						draggable={false}
 					/>
 				))}
 			</>
