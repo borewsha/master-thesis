@@ -390,7 +390,7 @@ const MapControlLayer = () => {
 		for (const f of figures) {
 			if (f.type === 'polyline') {
 				// Для лучшего результата - от 100
-				const n = 70
+				const n = 30
 				const grid = generateGrid(n, f)
 				// console.log(grid)
 				fillGridPoints(grid, n)
@@ -443,13 +443,13 @@ const MapControlLayer = () => {
 						console.log('data', data)
 						for (let i = 0; i < newGrid.length; i++) {
 							for (let j = 0; j < newGrid[i].length; j++) {
-								newGrid[i][j].weight = 0
+								newGrid[i][j].weight = -1000
 								const a = data.find(p => p.id === newGrid[i][j].id)
 								console.log('a', a)
 								if (a) {
 									newGrid[i][j].weight = a.weight
 								}
-								newGridPoints.push(a)
+								newGridPoints.push(newGrid[i][j])
 							}
 						}
 						console.log('newGrid after fetch', newGrid)
@@ -461,7 +461,7 @@ const MapControlLayer = () => {
 						dispatch(
 							figuresSlice.actions.addFigure({
 								id: uuid(),
-								type: 'way',
+								type: 'grid',
 								points: newGridPoints
 							})
 						)
