@@ -1,5 +1,5 @@
 import React from 'react'
-import { Polygon, Polyline } from 'react-leaflet'
+import { Polygon, Polyline, Popup } from 'react-leaflet'
 import CustomMarker from '@/shared/Map/CustomMarker'
 import { useAppDispatch } from '@/store'
 import { figuresSlice } from '@/figures.slice'
@@ -103,10 +103,31 @@ const Figure = ({ figure }) => {
 
 	const WayView = () => {
 		return (
-			<Polyline
-				positions={figure?.points.map((p: any) => p.position) || []}
-				pathOptions={{ color: getRandomBrightHexColor() }}
-			/>
+			<>
+				<Polyline
+					positions={figure?.points.map((p: any) => p.position) || []}
+					pathOptions={{ color: getRandomBrightHexColor() }}
+				/>
+				{figure?.points.map((p: any, i: number) => (
+					<CustomMarker
+						size={10}
+						key={p.id}
+						initialPosition={p.position}
+						color='orange'
+						onRemove={() => {}}
+						popup={'Вес: ' + p.weight}
+						// onDrag={(e: any) =>
+						// 	dispatch(
+						// 		figuresSlice.actions.updatePointPosition({
+						// 			figureId: figure.id,
+						// 			pointId: p.id,
+						// 			updatedPosition: e.target._latlng
+						// 		})
+						// 	)
+						// }
+					/>
+				))}
+			</>
 		)
 	}
 

@@ -409,7 +409,8 @@ const MapControlLayer = () => {
 				const points = path.map(([x, y]) => ({
 					position: grid[x][y].position,
 					id: grid[x][y].id,
-					isFree: true
+					isFree: true,
+					weight: grid[x][y].weight
 				}))
 
 				// Путь
@@ -428,7 +429,7 @@ const MapControlLayer = () => {
 				const newGrid = createExpandedGrid(grid, points)
 				// console.log('newGrid', newGrid)
 
-				packageDataToDownload({ pathPoints: points, gridAroundPath: newGrid })
+				// packageDataToDownload({ pathPoints: points, gridAroundPath: newGrid })
 
 				fetch('http://localhost:8000/process_data', {
 					method: 'POST',

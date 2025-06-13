@@ -6,6 +6,7 @@ export type Point = {
 	id?: string
 	position: LatLng | { lat: number; lng: number }
 	isFree?: boolean
+	weight?: number
 }
 
 export type FigureType =

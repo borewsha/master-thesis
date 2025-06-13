@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Marker } from 'react-leaflet'
+import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import ReactDOMServer from 'react-dom/server'
 import CustomMarkerView from '@/shared/Map/CustomMarkerView'
@@ -10,7 +10,8 @@ const CustomMarker = ({
 	color,
 	onRemove,
 	onDrag,
-	draggable = true
+	draggable = true,
+	popup
 }) => {
 	const [position, setPosition] = useState(initialPosition)
 
@@ -38,7 +39,9 @@ const CustomMarker = ({
 					dragend: onDrag,
 					click: () => {}
 				}}
-			/>
+			>
+				{popup && <Popup>{popup}</Popup>}
+			</Marker>
 		)
 	)
 }
