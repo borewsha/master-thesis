@@ -120,6 +120,7 @@ const Figure = ({ figure }) => {
 								<p>Вес: {p.weight}</p>
 								<p>lat: {p.position.lat}</p>
 								<p>lng: {p.position.lng}</p>
+								<p>id: {p.id}</p>
 							</>
 						}
 						draggable={false}
