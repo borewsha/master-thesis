@@ -6,14 +6,14 @@ import { figuresSlice } from '@/figures.slice'
 
 const Figure = ({ figure }) => {
 	const dispatch = useAppDispatch()
-	function getRandomBrightHexColor() {
-		// Генерируем насыщенные компоненты (от 80% до 100%)
-		const r = Math.floor(200 + Math.random() * 55).toString(16)
-		const g = Math.floor(200 + Math.random() * 55).toString(16)
-		const b = Math.floor(200 + Math.random() * 55).toString(16)
-
-		return `#${r}${g}${b}`.replace(/0x/g, '').padEnd(7, '0')
-	}
+	// function getRandomBrightHexColor() {
+	// 	// Генерируем насыщенные компоненты (от 80% до 100%)
+	// 	const r = Math.floor(200 + Math.random() * 55).toString(16)
+	// 	const g = Math.floor(200 + Math.random() * 55).toString(16)
+	// 	const b = Math.floor(200 + Math.random() * 55).toString(16)
+	//
+	// 	return `#${r}${g}${b}`.replace(/0x/g, '').padEnd(7, '0')
+	// }
 
 	const PolygonView = () => {
 		return (
@@ -114,26 +114,26 @@ const Figure = ({ figure }) => {
 			<>
 				<Polyline
 					positions={figure?.points.map((p: any) => p.position) || []}
-					pathOptions={{ color: getRandomBrightHexColor() }}
+					pathOptions={{ color: 'green' }}
 				/>
-				{figure?.points.map((p: any, i: number) => (
-					<CustomMarker
-						size={10}
-						key={p.id}
-						initialPosition={p.position}
-						color='orange'
-						onRemove={() => {}}
-						popup={
-							<>
-								<p>Вес: {p.weight}</p>
-								<p>lat: {p.position.lat}</p>
-								<p>lng: {p.position.lng}</p>
-								<p>id: {p.id}</p>
-							</>
-						}
-						draggable={false}
-					/>
-				))}
+				{/*{figure?.points.map((p: any, i: number) => (*/}
+				{/*	<CustomMarker*/}
+				{/*		size={10}*/}
+				{/*		key={p.id}*/}
+				{/*		initialPosition={p.position}*/}
+				{/*		color='orange'*/}
+				{/*		onRemove={() => {}}*/}
+				{/*		popup={*/}
+				{/*			<>*/}
+				{/*				<p>Вес: {p.weight}</p>*/}
+				{/*				<p>lat: {p.position.lat}</p>*/}
+				{/*				<p>lng: {p.position.lng}</p>*/}
+				{/*				<p>id: {p.id}</p>*/}
+				{/*			</>*/}
+				{/*		}*/}
+				{/*		draggable={false}*/}
+				{/*	/>*/}
+				{/*))}*/}
 			</>
 		)
 	}
