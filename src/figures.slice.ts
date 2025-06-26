@@ -30,22 +30,19 @@ export interface FiguresState {
 	isEditMode: boolean
 	currentFigure: Figure | null
 	figures: Figure[]
+	isEditMap: boolean
 }
 
 const initialState: FiguresState = {
 	isEditMode: false,
 	currentFigure: null,
-	figures: []
+	figures: [],
+	isEditMap: false
 }
 
 export const figuresSlice = createSlice({
 	name: 'figures',
 	initialState,
-	selectors: {
-		getIsEditMode: state => state.isEditMode,
-		getFigures: state => state.figures,
-		getCurrentFigure: state => state.currentFigure
-	},
 	reducers: {
 		setEditMode: (state, action: PayloadAction<boolean>) => {
 			state.isEditMode = action.payload
@@ -102,6 +99,12 @@ export const figuresSlice = createSlice({
 			state.figures
 				.filter(figure => figure.id === action.payload)
 				.map(figure => (figure.isSelected = true))
+		},
+		setIsEditMap: (state, { payload }) => {
+			state.isEditMap = payload
+		},
+		clearFigures: (state) => {
+			state.figures = []
 		}
 	}
 })

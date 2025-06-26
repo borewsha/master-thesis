@@ -37,13 +37,13 @@ interface Point {
 
 interface Node {
 	point: Point
-	f: number // f = g + h
-	g: number // стоимость пути от старта
-	h: number // эвристическая оценка до цели
+	f: number
+	g: number
+	h: number
 	parent: Node | null
 }
 
-const Map = ({ zoom = 10, location }: MapProps) => {
+const MapComponent = ({ zoom = 10, location }: MapProps) => {
 	const dispatch = useAppDispatch()
 	const [isSetStartFinishPoints, setIsSetStartFinishPoints] =
 		useState<boolean>(false)
@@ -58,36 +58,16 @@ const Map = ({ zoom = 10, location }: MapProps) => {
 				data.features.find(feature => feature.properties.name === 'Denmark')
 			)
 			.then(denmark => denmark.geometry.coordinates.map(mapCoordsListToFigures))
-			.then(figures =>
+			.then(figures => {
+				dispatch(figuresSlice.actions.clearFigures())
 				figures.forEach(figure => {
-					console.log(figure)
 					dispatch(figuresSlice.actions.addFigure(figure[0]))
 				})
-			)
-		// fetch('/data.json')
-		// 	.then(response => response.json())
-		// 	.then(response => {
-		// 		console.log(
-		// 			aStarMaxWeight(
-		// 				response.path,
-		// 				{
-		// 					lat: 55.339233474507196,
-		// 					lng: 10.987140329923633,
-		// 					weight: 0.699999988079071
-		// 				},
-		// 				{
-		// 					lat: 55.175459404639156,
-		// 					lng: 10.977967296172363,
-		// 					weight: 0.022480923682451248
-		// 				}
-		// 			)
-		// 		)
-		// 	})
-	}, [])
+			})
+	}, [dispatch])
 
 	return (
 		location && (
-			// <div className={s.mapWrapper}>
 			<MapContainer
 				center={[location.coords.latitude, location.coords.longitude]}
 				zoom={zoom}
@@ -98,19 +78,9 @@ const Map = ({ zoom = 10, location }: MapProps) => {
 				<Markers isSetWay={isSetStartFinishPoints} />
 				<TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 				<MapControlLayer />
-				{/*<CustomMarker*/}
-				{/*	initialPosition={[*/}
-				{/*		location.coords.latitude,*/}
-				{/*		location.coords.longitude*/}
-				{/*	]}*/}
-				{/*	color='gray'*/}
-				{/*	draggable={false}*/}
-				{/*/>*/}
-				{/*<Way color='orange' points={points} />*/}
 			</MapContainer>
-			// </div>
 		)
 	)
 }
 
-export default Map
+export default MapComponent

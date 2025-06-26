@@ -1,5 +1,5 @@
 import { useMap } from 'react-leaflet'
-import React from 'react'
+import React, { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { figuresSlice } from '@/figures.slice'
 import {
@@ -13,12 +13,7 @@ import {
 const MapControlLayer = () => {
 	const map = useMap()
 	const dispatch = useAppDispatch()
-	const isEditMode = useAppSelector(state =>
-		figuresSlice.selectors.getIsEditMode(state)
-	)
-	const figures = useAppSelector(state =>
-		figuresSlice.selectors.getFigures(state)
-	)
+	const { isEditMap, isEditMode } = useAppSelector(state => state.figures)
 
 	return (
 		<div
@@ -33,14 +28,20 @@ const MapControlLayer = () => {
 				border: '1px solid blue'
 			}}
 		>
-			<div style={{}}>
+			<div
+				style={{
+					display: 'flex',
+					flexDirection: 'column',
+					gap: 10
+				}}
+			>
 				<button
 					style={{ display: 'block' }}
 					onClick={() => {
 						map.setZoom(map.getZoom() + 1)
 					}}
 				>
-					Плюс
+					Приблизить карту
 				</button>
 				<button
 					style={{ display: 'block' }}
@@ -48,29 +49,75 @@ const MapControlLayer = () => {
 						map.setZoom(map.getZoom() - 1)
 					}}
 				>
-					Минус
+					Отдалить карту
 				</button>
-				{isEditMode ? (
-					<>
-						<button onMouseDown={() => saveHandler(dispatch)}>Сохранить</button>
-						<button onMouseDown={() => cancelHandler(dispatch)}>Отменить</button>
-					</>
-				) : (
+				{!isEditMap && (
 					<>
 						<button
 							style={{ display: 'block' }}
-							onClick={() => createMultilineHandler(dispatch)}
+							onClick={() => {
+								map.setZoom(map.getZoom() - 1)
+							}}
 						>
-							Добавить multiline
+							Построить маршрут
 						</button>
-						<button style={{ display: 'block' }} onClick={() => createPolygonHandler(dispatch)}>
-							Добавить polygon
-						</button>
-						<button style={{ display: 'block' }} onClick={() => createGridHandler(dispatch, figures)}>
-							Построить путь
+						<button
+							style={{ display: 'block' }}
+							onClick={() => {
+								dispatch(figuresSlice.actions.setIsEditMap(true))
+							}}
+						>
+							Редактировать карту
 						</button>
 					</>
 				)}
+				{isEditMap && (
+					<>
+						<button
+							style={{ display: 'block' }}
+							onClick={() => {
+								map.setZoom(map.getZoom() - 1)
+							}}
+						>
+							Сохранить
+						</button>
+						<button
+							style={{ display: 'block' }}
+							onClick={() => {
+								dispatch(figuresSlice.actions.setIsEditMap(true))
+							}}
+						>
+							Отменить
+						</button>
+					</>
+				)}
+				{/*{*/}
+				{/*	isEditMap ?*/}
+				{/*			<>*/}
+				{/*				*/}
+				{/*			</>*/}
+				{/*}*/}
+				{/*{isEditMode ? (*/}
+				{/*	<>*/}
+				{/*		<button onMouseDown={() => saveHandler(dispatch)}>Сохранить</button>*/}
+				{/*		<button onMouseDown={() => cancelHandler(dispatch)}>Отменить</button>*/}
+				{/*	</>*/}
+				{/*) : (*/}
+				{/*	<>*/}
+				{/*		<button*/}
+				{/*			style={{ display: 'block' }}*/}
+				{/*			onClick={() => createMultilineHandler(dispatch)}*/}
+				{/*		>*/}
+				{/*			Добавить multiline*/}
+				{/*		</button>*/}
+				{/*		<button style={{ display: 'block' }} onClick={() => createPolygonHandler(dispatch)}>*/}
+				{/*			Добавить polygon*/}
+				{/*		</button>*/}
+				{/*		<button style={{ display: 'block' }} onClick={() => createGridHandler(dispatch, figures)}>*/}
+				{/*			Построить путь*/}
+				{/*		</button>*/}
+				{/*	</>*/}
+				{/*)}*/}
 			</div>
 		</div>
 	)

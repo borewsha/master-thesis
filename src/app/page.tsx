@@ -6,17 +6,10 @@ import { Provider } from 'react-redux'
 import { store } from '@/store'
 
 const Home = () => {
-	const Map = dynamic(() => import('@/shared/Map/Map'), { ssr: false })
+	const Map = dynamic(() => import('@/shared/Map/MapComponent'), { ssr: false })
 	const [location, setLocation] = useState<GeolocationPosition>({
 		coords: { latitude: 55.321725, longitude: 11.042428 }
 	})
-
-	// useEffect(() => {
-	// 	navigator.geolocation.getCurrentPosition(location => {
-	// 		console.debug(location)
-	// 		setLocation(location)
-	// 	})
-	// }, [])
 
 	return (
 		<Provider store={store}>

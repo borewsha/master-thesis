@@ -6,11 +6,8 @@ import Figure from '@/shared/Map/Figure'
 
 const Markers = () => {
 	const dispatch = useAppDispatch()
-	const isEditMode = useAppSelector(state =>
-		figuresSlice.selectors.getIsEditMode(state)
-	)
-	const figures = useAppSelector(state =>
-		figuresSlice.selectors.getFigures(state)
+	const { isEditMap, isEditMode, figures, currentFigure } = useAppSelector(
+		state => state.figures
 	)
 
 	useMapEvents({
@@ -23,15 +20,16 @@ const Markers = () => {
 		}
 	})
 
-	const currentFigure = useAppSelector(state =>
-		figuresSlice.selectors.getCurrentFigure(state)
-	)
-
 	return (
 		<>
 			{currentFigure && <Figure figure={currentFigure} />}
 			{figures
-				.filter(f => f.type === 'way' || f.type === 'polyline')
+				.filter(
+					f =>
+						f.type === 'way' ||
+						f.type === 'polyline' ||
+						(isEditMap && f.type === 'polygon')
+				)
 				.map(f => (
 					<Figure key={f.id} figure={f} />
 				))}
