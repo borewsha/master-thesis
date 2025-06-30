@@ -1,4 +1,3 @@
-# Логика для загрузки файлов (downoload_files.ipynb)
 import threading
 import time
 import requests as r

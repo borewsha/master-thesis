@@ -45,9 +45,6 @@ class DataJsonModel(BaseModel):
 
 @app.post("/process_data")
 async def process_data_endpoint(data: dict = Body(...)):
-    """
-    Принимает data.json (JSON в теле), возвращает hui.json (JSON с весами)
-    """
     try:
         result_json = process_data_logic.run_process_json(data)
         print('*' * 30)

@@ -1,4 +1,3 @@
-# Логика для обработки data.json и генерации hui.json (last-try.ipynb)
 import shutil
 import os
 from src import consts
