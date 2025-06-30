@@ -31,13 +31,15 @@ export interface FiguresState {
 	currentFigure: Figure | null
 	figures: Figure[]
 	isEditMap: boolean
+	isCreateRoute: boolean
 }
 
 const initialState: FiguresState = {
 	isEditMode: false,
 	currentFigure: null,
 	figures: [],
-	isEditMap: false
+	isEditMap: false,
+	isCreateRoute: false
 }
 
 export const figuresSlice = createSlice({
@@ -103,8 +105,11 @@ export const figuresSlice = createSlice({
 		setIsEditMap: (state, { payload }) => {
 			state.isEditMap = payload
 		},
-		clearFigures: (state) => {
+		clearFigures: state => {
 			state.figures = []
+		},
+		setIsCreateRoute: (state, { payload }) => {
+			state.isCreateRoute = payload
 		}
 	}
 })
