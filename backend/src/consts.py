@@ -1,0 +1,1 @@
+PATH_TO_DUCKDB = 'data/duckdb-test.db'
