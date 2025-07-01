@@ -3,7 +3,11 @@ import { figuresSlice, Point, Figure } from '@/figures.slice'
 import { v4 as uuid } from 'uuid'
 import { generateGrid } from '@/entity/grid/lib/generateGrid'
 import { aStarMaxWeight } from '@/entity/aStar'
-import { fillGridPoints, createExpandedGrid, getGridPerimeter } from './gridUtils'
+import {
+	fillGridPoints,
+	createExpandedGrid,
+	getGridPerimeter
+} from './gridUtils'
 import { leeAlgorithm } from './leeAlgorithm'
 import { AppDispatch } from '@/store'
 import { Grid } from '@/entity/grid/types'
@@ -36,12 +40,14 @@ export function createGridHandler(dispatch: AppDispatch, figures: Figure[]) {
 				isFree: true,
 				weight: grid[x][y].weight
 			}))
-			dispatch(figuresSlice.actions.addFigure({
-				id: uuid(),
-				type: 'way',
-				isSelected: false,
-				points
-			}))
+			// dispatch(
+			// 	figuresSlice.actions.addFigure({
+			// 		id: uuid(),
+			// 		type: 'way',
+			// 		isSelected: false,
+			// 		points
+			// 	})
+			// )
 			const newGrid = createExpandedGrid(grid, points)
 			const newGridPoints: Point[] = []
 			fetch('http://localhost:8000/process_data', {
@@ -50,33 +56,58 @@ export function createGridHandler(dispatch: AppDispatch, figures: Figure[]) {
 				body: JSON.stringify({ pathPoints: points, gridAroundPath: newGrid })
 			})
 				.then(res => res.json())
-				.then((res: { path: { id: string; lng: number; lat: number; weight: number }[] }) => {
-					const data = res.path
-					for (let i = 0; i < newGrid.length; i++) {
-						for (let j = 0; j < newGrid[i].length; j++) {
-							newGrid[i][j].weight = -1000
-							const a = data.find((p: any) => p.id === newGrid[i][j].id)
-							if (a) {
-								newGrid[i][j].weight = a.weight
+				.then(
+					(res: {
+						path: { id: string; lng: number; lat: number; weight: number }[]
+					}) => {
+						const data = res.path
+						for (let i = 0; i < newGrid.length; i++) {
+							for (let j = 0; j < newGrid[i].length; j++) {
+								newGrid[i][j].weight = -1000
+								const a = data.find((p: any) => p.id === newGrid[i][j].id)
+								if (a) {
+									newGrid[i][j].weight = a.weight
+								}
+								newGridPoints.push(newGrid[i][j])
 							}
-							newGridPoints.push(newGrid[i][j])
 						}
+						const path =
+							aStarMaxWeight(newGrid, grid[n][n], points[points.length - 1]) ||
+							[]
+						dispatch(
+							figuresSlice.actions.addFigure({
+								id: uuid(),
+								type: 'grid',
+								points: newGridPoints
+							})
+						)
+						dispatch(
+							figuresSlice.actions.addFigure({
+								id: uuid(),
+								type: 'way',
+								points: path
+							})
+						)
 					}
-					const path = aStarMaxWeight(
-						newGrid,
-						grid[n][n],
-						points[points.length - 1]
-					) || []
-					dispatch(figuresSlice.actions.addFigure({
-						id: uuid(),
-						type: 'grid',
-						points: newGridPoints
-					}))
-					dispatch(figuresSlice.actions.addFigure({
-						id: uuid(),
-						type: 'way',
-						points: path
-					}))
+				)
+				.catch(e => {
+					fetch('/calculatedWay.json')
+						.then(res => res.json())
+						.then(data => {
+							const points = data.map(p => ({
+								position: {
+									lat: p.Latitude,
+									lng: p.Longitude
+								}
+							}))
+							dispatch(
+								figuresSlice.actions.addFigure({
+									points,
+									type: 'way',
+									id: '1'
+								})
+							)
+						})
 				})
 			const newGridWay = getGridPerimeter(newGrid)
 		}

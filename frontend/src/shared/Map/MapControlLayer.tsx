@@ -13,14 +13,20 @@ import {
 const MapControlLayer = () => {
 	const map = useMap()
 	const dispatch = useAppDispatch()
-	const { isEditMap, isCreateRoute, isEditMode, currentFigure, figures } =
-		useAppSelector(state => state.figures)
+	const {
+		isEditMap,
+		isCreateRoute,
+		isEditMode,
+		currentFigure,
+		figures,
+		isPolygonsVisible
+	} = useAppSelector(state => state.figures)
 
 	const [startInput, setStartInput] = useState('')
 	const [endInput, setEndInput] = useState('')
+	const [isAddPolygon, setIsAddPolygon] = useState<boolean>(false)
 
 	const handleAddPoint = (value: string, index: number) => {
-		// Не вызываем dispatch при каждом изменении value, только по кнопке
 		const [lat, lng] = value.split(',').map(Number)
 		if (!isNaN(lat) && !isNaN(lng)) {
 			dispatch(
@@ -50,6 +56,18 @@ const MapControlLayer = () => {
 				>
 					Отдалить карту
 				</button>
+				<div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+					<input
+						type='checkbox'
+						checked={isPolygonsVisible}
+						onMouseDown={() => {
+							dispatch(
+								figuresSlice.actions.setIsPolygonVisible(!isPolygonsVisible)
+							)
+						}}
+					/>
+					<p>Включить/выключить сушу</p>
+				</div>
 			</>
 		)
 	}
@@ -60,42 +78,28 @@ const MapControlLayer = () => {
 				<button
 					style={{ display: 'block' }}
 					onClick={() => {
-						createMultilineHandler(dispatch)
 						dispatch(figuresSlice.actions.setIsCreateRoute(true))
+						createMultilineHandler(dispatch)
+						dispatch(
+							figuresSlice.actions.addPointToCurrentFigure({
+								position: {
+									lat: 55.465552,
+									lng: 10.917272
+								}
+							})
+						)
+						dispatch(
+							figuresSlice.actions.addPointToCurrentFigure({
+								position: {
+									lat: 55.05376,
+									lng: 10.640052
+								}
+							})
+						)
+						dispatch(figuresSlice.actions.saveCurrentFigure())
 					}}
 				>
 					Построить маршрут
-				</button>
-				<button
-					style={{ display: 'block' }}
-					onClick={() => {
-						dispatch(figuresSlice.actions.setIsEditMap(true))
-					}}
-				>
-					Редактировать карту
-				</button>
-			</>
-		) : null
-	}
-
-	const MapEditingMenu = () => {
-		return isEditMap ? (
-			<>
-				<button
-					style={{ display: 'block' }}
-					onClick={() => {
-						map.setZoom(map.getZoom() - 1)
-					}}
-				>
-					Сохранить
-				</button>
-				<button
-					style={{ display: 'block' }}
-					onClick={() => {
-						dispatch(figuresSlice.actions.setIsEditMap(true))
-					}}
-				>
-					Отменить
 				</button>
 			</>
 		) : null
@@ -114,21 +118,52 @@ const MapControlLayer = () => {
 						position: { lat, lng }
 					})
 				)
-				// ref.current!.value = ''
-				// ref.current!.focus()
 			}
+		}
+
+		const getPointsCoordinates = (index: number) => {
+			const polyline = figures.find(f => f.type === 'polyline')
+			if (polyline?.points[index]) {
+				return (
+					polyline?.points[index]?.position?.lat +
+					', ' +
+					polyline?.points[index]?.position?.lng
+				)
+			}
+			if (currentFigure?.points[index]) {
+				return (
+					currentFigure?.points[index]?.position?.lat +
+					', ' +
+					currentFigure?.points[index]?.position?.lng
+				)
+			}
+			return ''
 		}
 
 		return isCreateRoute ? (
 			<>
 				<p>Координаты начала</p>
-				<input type='text' placeholder='Координаты начала' ref={startRef} />
+				<input
+					type='text'
+					placeholder='Координаты начала'
+					ref={startRef}
+					onChange={e => {
+						setStartInput(e.target.value)
+					}}
+					value={getPointsCoordinates(0) || startInput}
+				/>
 				<p>Координаты конца</p>
-				<input type='text' placeholder='Координаты конца' ref={endRef} />
+				<input
+					type='text'
+					placeholder='Координаты конца'
+					ref={endRef}
+					onChange={e => {
+						setEndInput(e.target.value)
+					}}
+					value={getPointsCoordinates(1) || endInput}
+				/>
 				<button
-					onClick={() => {
-						handleAddPointRef(startRef)
-						handleAddPointRef(endRef)
+					onMouseDown={() => {
 						createGridHandler(dispatch, figures)
 					}}
 				>
@@ -136,12 +171,8 @@ const MapControlLayer = () => {
 				</button>
 				<button
 					style={{ display: 'block' }}
-					onClick={e => {
-						e.stopPropagation()
-						e.preventDefault()
+					onMouseDown={e => {
 						dispatch(figuresSlice.actions.setIsCreateRoute(false))
-						dispatch(figuresSlice.actions.cancelFigureAdding())
-						dispatch(figuresSlice.actions.setEditMode(false))
 					}}
 				>
 					Назад
@@ -189,35 +220,36 @@ const MapControlLayer = () => {
 				>
 					<DefaultMenu />
 					<MainMenu />
-					<MapEditingMenu />
 					<CreateRouteMenu />
-					{/*{*/}
-					{/*	isEditMap ?*/}
-					{/*			<>*/}
-					{/*				*/}
-					{/*			</>*/}
-					{/*}*/}
-					{/*{isEditMode ? (*/}
-					{/*	<>*/}
-					{/*		<button onMouseDown={() => saveHandler(dispatch)}>Сохранить</button>*/}
-					{/*		<button onMouseDown={() => cancelHandler(dispatch)}>Отменить</button>*/}
-					{/*	</>*/}
-					{/*) : (*/}
-					{/*	<>*/}
-					{/*		<button*/}
-					{/*			style={{ display: 'block' }}*/}
-					{/*			onClick={() => createMultilineHandler(dispatch)}*/}
-					{/*		>*/}
-					{/*			Добавить multiline*/}
-					{/*		</button>*/}
-					{/*		<button style={{ display: 'block' }} onClick={() => createPolygonHandler(dispatch)}>*/}
-					{/*			Добавить polygon*/}
-					{/*		</button>*/}
-					{/*		<button style={{ display: 'block' }} onClick={() => createGridHandler(dispatch, figures)}>*/}
-					{/*			Построить путь*/}
-					{/*		</button>*/}
-					{/*	</>*/}
-					{/*)}*/}
+					{isEditMode ? (
+						<>
+							<button
+								onMouseDown={e => {
+									dispatch(figuresSlice.actions.saveCurrentFigure())
+									setTimeout(() => {
+										dispatch(figuresSlice.actions.setEditMode(false))
+									}, 250)
+								}}
+							>
+								Сохранить
+							</button>
+							<button onMouseDown={() => cancelHandler(dispatch)}>
+								Отменить
+							</button>
+						</>
+					) : (
+						<>
+							<button
+								disabled={isEditMode}
+								style={{ display: 'block' }}
+								onClick={e => {
+									createPolygonHandler(dispatch)
+								}}
+							>
+								Добавить препятствие
+							</button>
+						</>
+					)}
 				</div>
 			</div>
 		</>

@@ -21,7 +21,7 @@ const Figure = ({ figure }) => {
 						key={p.id}
 						initialPosition={p.position}
 						color='orange'
-						size={10}
+						size={15}
 						onRemove={() => {}}
 						onDrag={(e: any) =>
 							dispatch(

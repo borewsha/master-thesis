@@ -32,6 +32,7 @@ export interface FiguresState {
 	figures: Figure[]
 	isEditMap: boolean
 	isCreateRoute: boolean
+	isPolygonsVisible: boolean
 }
 
 const initialState: FiguresState = {
@@ -39,7 +40,8 @@ const initialState: FiguresState = {
 	currentFigure: null,
 	figures: [],
 	isEditMap: false,
-	isCreateRoute: false
+	isCreateRoute: false,
+	isPolygonsVisible: false
 }
 
 export const figuresSlice = createSlice({
@@ -110,6 +112,9 @@ export const figuresSlice = createSlice({
 		},
 		setIsCreateRoute: (state, { payload }) => {
 			state.isCreateRoute = payload
+		},
+		setIsPolygonVisible: (state, { payload }) => {
+			state.isPolygonsVisible = payload
 		}
 	}
 })
