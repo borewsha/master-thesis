@@ -1,5 +1,5 @@
 import { useMap } from 'react-leaflet'
-import React, { useState, useRef } from 'react'
+import React, { useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { figuresSlice } from '@/figures.slice'
 import {
@@ -9,6 +9,7 @@ import {
 	saveHandler,
 	cancelHandler
 } from './handlers'
+import L from 'leaflet'
 
 const MapControlLayer = () => {
 	const map = useMap()
@@ -21,10 +22,6 @@ const MapControlLayer = () => {
 		figures,
 		isPolygonsVisible
 	} = useAppSelector(state => state.figures)
-
-	const [startInput, setStartInput] = useState('')
-	const [endInput, setEndInput] = useState('')
-	const [isAddPolygon, setIsAddPolygon] = useState<boolean>(false)
 
 	const handleAddPoint = (value: string, index: number) => {
 		const [lat, lng] = value.split(',').map(Number)
@@ -80,23 +77,6 @@ const MapControlLayer = () => {
 					onClick={() => {
 						dispatch(figuresSlice.actions.setIsCreateRoute(true))
 						createMultilineHandler(dispatch)
-						dispatch(
-							figuresSlice.actions.addPointToCurrentFigure({
-								position: {
-									lat: 55.465552,
-									lng: 10.917272
-								}
-							})
-						)
-						dispatch(
-							figuresSlice.actions.addPointToCurrentFigure({
-								position: {
-									lat: 55.05376,
-									lng: 10.640052
-								}
-							})
-						)
-						dispatch(figuresSlice.actions.saveCurrentFigure())
 					}}
 				>
 					Построить маршрут
@@ -108,36 +88,52 @@ const MapControlLayer = () => {
 	const CreateRouteMenu = () => {
 		const startRef = useRef<HTMLInputElement>(null)
 		const endRef = useRef<HTMLInputElement>(null)
+		const [startInput, setStartInput] = React.useState('')
+		const [endInput, setEndInput] = React.useState('')
+		const [manualEdit, setManualEdit] = React.useState<{start: boolean, end: boolean}>({start: false, end: false})
 
-		const handleAddPointRef = (ref: React.RefObject<HTMLInputElement>) => {
-			const value = ref.current?.value || ''
-			const [lat, lng] = value.split(',').map(Number)
-			if (!isNaN(lat) && !isNaN(lng)) {
-				dispatch(
-					figuresSlice.actions.addPointToCurrentFigure({
-						position: { lat, lng }
-					})
-				)
+		// Синхронизация с currentFigure (например, после клика по карте)
+		React.useEffect(() => {
+			if (currentFigure && currentFigure.points[0] && !manualEdit.start) {
+				const { lat, lng } = currentFigure.points[0].position
+				const val = `${lat}, ${lng}`
+				if (val !== startInput) setStartInput(val)
+			}
+		}, [currentFigure?.points[0]?.position?.lat, currentFigure?.points[0]?.position?.lng, manualEdit.start])
+		React.useEffect(() => {
+			if (currentFigure && currentFigure.points[1] && !manualEdit.end) {
+				const { lat, lng } = currentFigure.points[1].position
+				const val = `${lat}, ${lng}`
+				if (val !== endInput) setEndInput(val)
+			}
+		}, [currentFigure?.points[1]?.position?.lat, currentFigure?.points[1]?.position?.lng, manualEdit.end])
+
+		const handleInputChange = (value: string, index: number) => {
+			if (index === 0) {
+				setStartInput(value)
+				setManualEdit(prev => ({...prev, start: true}))
+			}
+			if (index === 1) {
+				setEndInput(value)
+				setManualEdit(prev => ({...prev, end: true}))
 			}
 		}
 
-		const getPointsCoordinates = (index: number) => {
-			const polyline = figures.find(f => f.type === 'polyline')
-			if (polyline?.points[index]) {
-				return (
-					polyline?.points[index]?.position?.lat +
-					', ' +
-					polyline?.points[index]?.position?.lng
-				)
+		const handleInputBlur = (value: string, index: number) => {
+			if (index === 0) setManualEdit(prev => ({...prev, start: false}))
+			if (index === 1) setManualEdit(prev => ({...prev, end: false}))
+			if (!value.trim()) return
+			const [lat, lng] = value.split(',').map(Number)
+			if (isNaN(lat) || isNaN(lng)) return
+			if (!currentFigure || !currentFigure.points[index]) {
+				dispatch(figuresSlice.actions.addPointToCurrentFigure({ position: { lat, lng } }))
+			} else if (currentFigure.points[index].id) {
+				dispatch(figuresSlice.actions.updatePointPosition({
+					figureId: currentFigure.id,
+					pointId: currentFigure.points[index].id || '',
+					updatedPosition: L.latLng(lat, lng)
+				}))
 			}
-			if (currentFigure?.points[index]) {
-				return (
-					currentFigure?.points[index]?.position?.lat +
-					', ' +
-					currentFigure?.points[index]?.position?.lng
-				)
-			}
-			return ''
 		}
 
 		return isCreateRoute ? (
@@ -147,20 +143,18 @@ const MapControlLayer = () => {
 					type='text'
 					placeholder='Координаты начала'
 					ref={startRef}
-					onChange={e => {
-						setStartInput(e.target.value)
-					}}
-					value={getPointsCoordinates(0) || startInput}
+					value={startInput}
+					onChange={e => handleInputChange(e.target.value, 0)}
+					onBlur={e => handleInputBlur(e.target.value, 0)}
 				/>
 				<p>Координаты конца</p>
 				<input
 					type='text'
 					placeholder='Координаты конца'
 					ref={endRef}
-					onChange={e => {
-						setEndInput(e.target.value)
-					}}
-					value={getPointsCoordinates(1) || endInput}
+					value={endInput}
+					onChange={e => handleInputChange(e.target.value, 1)}
+					onBlur={e => handleInputBlur(e.target.value, 1)}
 				/>
 				<button
 					onMouseDown={() => {
