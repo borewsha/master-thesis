@@ -6,15 +6,21 @@ import Figure from '@/shared/Map/Figure'
 
 const Markers = () => {
 	const dispatch = useAppDispatch()
-	const { isEditMap, figures, currentFigure, isEditMode, isPolygonsVisible } =
+	const { figures, currentFigure, isEditMode, isPolygonsVisible, isCreateRoute } =
 		useAppSelector(state => state.figures)
 
 	useMapEvents({
 		click(e) {
 			if (isEditMode) {
-				dispatch(
-					figuresSlice.actions.addPointToCurrentFigure({ position: e.latlng })
-				)
+				dispatch(figuresSlice.actions.addPointToCurrentFigure({ position: e.latlng }))
+				return
+			}
+			if (isCreateRoute && currentFigure) {
+				const pointsCount = currentFigure.points.length
+				if (pointsCount < 2) {
+					dispatch(figuresSlice.actions.addPointToCurrentFigure({ position: e.latlng }))
+				}
+				// Если уже две точки — игнорировать все последующие клики
 			}
 		}
 	})
