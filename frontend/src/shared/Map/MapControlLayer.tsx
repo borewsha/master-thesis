@@ -1,5 +1,5 @@
 import { useMap } from 'react-leaflet'
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { figuresSlice, Point } from '@/figures.slice'
 import {
@@ -21,7 +21,8 @@ const MapControlLayer = () => {
 		isEditMode,
 		currentFigure,
 		figures,
-		isPolygonsVisible
+		isPolygonsVisible,
+		history
 	} = useAppSelector(state => state.figures)
 
 	const DefaultMenu = () => {
@@ -216,6 +217,29 @@ const MapControlLayer = () => {
 		) : null
 	}
 
+	// Добавим отображение истории путей
+	const HistoryBlock = () => (
+		<div style={{ marginTop: 20 }}>
+			<h4>История маршрутов</h4>
+			{history.length === 0 && (
+				<div style={{ color: '#888' }}>Нет сохранённых маршрутов</div>
+			)}
+			{history.map((ways, idx) => (
+				<div key={idx} style={{ marginBottom: 8 }}>
+					Маршрут #{idx + 1}: {ways.map(w => w.points.length).join(', ')} точек
+				</div>
+			))}
+			{history.length > 0 && (
+				<button
+					style={{ marginTop: 8 }}
+					onClick={() => dispatch(figuresSlice.actions.clearHistory())}
+				>
+					Очистить историю
+				</button>
+			)}
+		</div>
+	)
+
 	return (
 		<>
 			{(isEditMap || isCreateRoute) && (
@@ -275,18 +299,21 @@ const MapControlLayer = () => {
 					) : (
 						<>
 							{!isCreateRoute && (
-								<button
-									disabled={isEditMode}
-									style={{ display: 'block' }}
-									onClick={e => {
-										createPolygonHandler(dispatch)
-									}}
-								>
-									Добавить препятствие
-								</button>
+								<>
+									<button
+										disabled={isEditMode}
+										style={{ display: 'block' }}
+										onClick={e => {
+											createPolygonHandler(dispatch)
+										}}
+									>
+										Добавить препятствие
+									</button>
+								</>
 							)}
 						</>
 					)}
+					<HistoryBlock />
 				</div>
 			</div>
 		</>
