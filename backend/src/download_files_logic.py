@@ -3,7 +3,7 @@ import time
 import requests as r
 import re
 import zipfile
-from src.consts import PATH_TO_DUCKDB
+from src.consts import PATH_TO_DATA_DIR, PATH_TO_DUCKDB
 import duckdb
 from tqdm.auto import tqdm
 import os
@@ -75,7 +75,7 @@ def get_files(con):
 
 def download_file(file_name: str, chunk_size=2 * 1024 * 1024):
     url = f"https://web.ais.dk/aisdata/{file_name}"
-    temp_file = f"{file_name}.tmp"
+    temp_file = PATH_TO_DATA_DIR / f"{file_name}.tmp"
     if os.path.exists(file_name):
         print(f"Файл {file_name} уже существует, пропускаем.")
         return
