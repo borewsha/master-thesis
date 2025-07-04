@@ -32,7 +32,8 @@ export interface FiguresState {
 	figures: Figure[]
 	isEditMap: boolean
 	isCreateRoute: boolean
-	isPolygonsVisible: boolean
+	isPolygonsVisible?: boolean
+	history: Figure[][]
 }
 
 const initialState: FiguresState = {
@@ -41,7 +42,8 @@ const initialState: FiguresState = {
 	figures: [],
 	isEditMap: false,
 	isCreateRoute: false,
-	isPolygonsVisible: false
+	isPolygonsVisible: false,
+	history: []
 }
 
 export const figuresSlice = createSlice({
@@ -115,6 +117,12 @@ export const figuresSlice = createSlice({
 		},
 		setIsPolygonVisible: (state, { payload }) => {
 			state.isPolygonsVisible = payload
+		},
+		addWayToHistory: (state, action: PayloadAction<Figure[]>) => {
+			state.history.push(action.payload)
+		},
+		clearHistory: state => {
+			state.history = []
 		}
 	}
 })
