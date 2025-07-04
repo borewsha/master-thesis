@@ -1,7 +1,7 @@
 import { useMap } from 'react-leaflet'
 import React, { useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { figuresSlice } from '@/figures.slice'
+import { figuresSlice, Point } from '@/figures.slice'
 import {
 	createMultilineHandler,
 	createPolygonHandler,
@@ -10,6 +10,7 @@ import {
 	cancelHandler
 } from './handlers'
 import L from 'leaflet'
+import figure from '@/shared/Map/Figure'
 
 const MapControlLayer = () => {
 	const map = useMap()
@@ -22,17 +23,6 @@ const MapControlLayer = () => {
 		figures,
 		isPolygonsVisible
 	} = useAppSelector(state => state.figures)
-
-	const handleAddPoint = (value: string, index: number) => {
-		const [lat, lng] = value.split(',').map(Number)
-		if (!isNaN(lat) && !isNaN(lng)) {
-			dispatch(
-				figuresSlice.actions.addPointToCurrentFigure({
-					position: { lat, lng }
-				})
-			)
-		}
-	}
 
 	const DefaultMenu = () => {
 		return (
@@ -76,7 +66,6 @@ const MapControlLayer = () => {
 					style={{ display: 'block' }}
 					onClick={() => {
 						dispatch(figuresSlice.actions.setIsCreateRoute(true))
-						createMultilineHandler(dispatch)
 					}}
 				>
 					Построить маршрут
@@ -90,7 +79,10 @@ const MapControlLayer = () => {
 		const endRef = useRef<HTMLInputElement>(null)
 		const [startInput, setStartInput] = React.useState('')
 		const [endInput, setEndInput] = React.useState('')
-		const [manualEdit, setManualEdit] = React.useState<{start: boolean, end: boolean}>({start: false, end: false})
+		const [manualEdit, setManualEdit] = React.useState<{
+			start: boolean
+			end: boolean
+		}>({ start: false, end: false })
 
 		// Синхронизация с currentFigure (например, после клика по карте)
 		React.useEffect(() => {
@@ -99,40 +91,62 @@ const MapControlLayer = () => {
 				const val = `${lat}, ${lng}`
 				if (val !== startInput) setStartInput(val)
 			}
-		}, [currentFigure?.points[0]?.position?.lat, currentFigure?.points[0]?.position?.lng, manualEdit.start])
+		}, [
+			currentFigure?.points[0]?.position?.lat,
+			currentFigure?.points[0]?.position?.lng,
+			manualEdit.start
+		])
 		React.useEffect(() => {
 			if (currentFigure && currentFigure.points[1] && !manualEdit.end) {
 				const { lat, lng } = currentFigure.points[1].position
 				const val = `${lat}, ${lng}`
 				if (val !== endInput) setEndInput(val)
 			}
-		}, [currentFigure?.points[1]?.position?.lat, currentFigure?.points[1]?.position?.lng, manualEdit.end])
+		}, [
+			currentFigure?.points[1]?.position?.lat,
+			currentFigure?.points[1]?.position?.lng,
+			manualEdit.end
+		])
 
 		const handleInputChange = (value: string, index: number) => {
 			if (index === 0) {
 				setStartInput(value)
-				setManualEdit(prev => ({...prev, start: true}))
+				setManualEdit(prev => ({ ...prev, start: true }))
 			}
 			if (index === 1) {
 				setEndInput(value)
-				setManualEdit(prev => ({...prev, end: true}))
+				setManualEdit(prev => ({ ...prev, end: true }))
 			}
 		}
 
 		const handleInputBlur = (value: string, index: number) => {
-			if (index === 0) setManualEdit(prev => ({...prev, start: false}))
-			if (index === 1) setManualEdit(prev => ({...prev, end: false}))
+			if (index === 0) setManualEdit(prev => ({ ...prev, start: false }))
+			if (index === 1) setManualEdit(prev => ({ ...prev, end: false }))
 			if (!value.trim()) return
 			const [lat, lng] = value.split(',').map(Number)
 			if (isNaN(lat) || isNaN(lng)) return
 			if (!currentFigure || !currentFigure.points[index]) {
-				dispatch(figuresSlice.actions.addPointToCurrentFigure({ position: { lat, lng } }))
+				dispatch(
+					figuresSlice.actions.addPointToCurrentFigure({
+						position: { lat, lng }
+					})
+				)
 			} else if (currentFigure.points[index].id) {
-				dispatch(figuresSlice.actions.updatePointPosition({
-					figureId: currentFigure.id,
-					pointId: currentFigure.points[index].id || '',
-					updatedPosition: L.latLng(lat, lng)
-				}))
+				dispatch(
+					figuresSlice.actions.updatePointPosition({
+						figureId: currentFigure.id,
+						pointId: currentFigure.points[index].id || '',
+						updatedPosition: L.latLng(lat, lng)
+					})
+				)
+			}
+		}
+
+		const getPoints = (index: number) => {
+			const figure = figures.find(f => f.type === 'polyline')
+			if (figure) {
+				const coordinate = figure.points[index].position
+				return coordinate.lat + ', ' + coordinate.lng
 			}
 		}
 
@@ -143,7 +157,7 @@ const MapControlLayer = () => {
 					type='text'
 					placeholder='Координаты начала'
 					ref={startRef}
-					value={startInput}
+					value={getPoints(0) || startInput}
 					onChange={e => handleInputChange(e.target.value, 0)}
 					onBlur={e => handleInputBlur(e.target.value, 0)}
 				/>
@@ -152,12 +166,34 @@ const MapControlLayer = () => {
 					type='text'
 					placeholder='Координаты конца'
 					ref={endRef}
-					value={endInput}
+					value={getPoints(1) || endInput}
 					onChange={e => handleInputChange(e.target.value, 1)}
 					onBlur={e => handleInputBlur(e.target.value, 1)}
 				/>
 				<button
 					onMouseDown={() => {
+						const startPositionArray = startInput.trim().split(',')
+						const startPosition = {
+							lat: +startPositionArray[0],
+							lng: +startPositionArray[1]
+						}
+						const endPositionArray = endInput.trim().split(',')
+						const endPosition = {
+							lat: +endPositionArray[0],
+							lng: +endPositionArray[1]
+						}
+						dispatch(figuresSlice.actions.startAddingFigure('polyline'))
+						dispatch(
+							figuresSlice.actions.addPointToCurrentFigure({
+								position: startPosition
+							})
+						)
+						dispatch(
+							figuresSlice.actions.addPointToCurrentFigure({
+								position: endPosition
+							})
+						)
+						dispatch(figuresSlice.actions.saveCurrentFigure())
 						createGridHandler(dispatch, figures)
 					}}
 				>
@@ -233,15 +269,17 @@ const MapControlLayer = () => {
 						</>
 					) : (
 						<>
-							<button
-								disabled={isEditMode}
-								style={{ display: 'block' }}
-								onClick={e => {
-									createPolygonHandler(dispatch)
-								}}
-							>
-								Добавить препятствие
-							</button>
+							{!isCreateRoute && (
+								<button
+									disabled={isEditMode}
+									style={{ display: 'block' }}
+									onClick={e => {
+										createPolygonHandler(dispatch)
+									}}
+								>
+									Добавить препятствие
+								</button>
+							)}
 						</>
 					)}
 				</div>
