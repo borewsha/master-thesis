@@ -217,6 +217,118 @@ const MapControlLayer = () => {
 		) : null
 	}
 
+	async function downloadJSON(data, filename = 'data.json') {
+		// Преобразуем данные в JSON-строку
+		const jsonData = JSON.stringify(data, null, 2)
+
+		// Создаем Blob (бинарный объект) с данными
+		const blob = new Blob([jsonData], { type: 'application/json' })
+
+		// Создаем URL для Blob
+		const url = URL.createObjectURL(blob)
+
+		// Создаем ссылку для скачивания
+		const a = document.createElement('a')
+		a.href = url
+		a.download = filename
+
+		// Добавляем ссылку в DOM, кликаем и удаляем
+		document.body.appendChild(a)
+		a.click()
+		document.body.removeChild(a)
+
+		// Освобождаем память, удаляя URL
+		URL.revokeObjectURL(url)
+	}
+
+	function downloadCSV(data, filename = 'data.csv') {
+		// Преобразуем данные в CSV-формат
+		const csvContent = convertToCSV(data)
+
+		// Создаем Blob и скачиваем
+		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+		const url = URL.createObjectURL(blob)
+		const a = document.createElement('a')
+		a.href = url
+		a.download = filename
+		document.body.appendChild(a)
+		a.click()
+		document.body.removeChild(a)
+		URL.revokeObjectURL(url)
+	}
+
+	// Рекурсивно преобразует любую структуру в CSV
+	function convertToCSV(data) {
+		if (Array.isArray(data)) {
+			return arrayToCSV(data)
+		} else if (typeof data === 'object' && data !== null) {
+			return objectToCSV(data)
+		} else {
+			// Примитивы (числа, строки, булевы)
+			return String(data)
+		}
+	}
+
+	// Обрабатывает массив объектов (или примитивов)
+	function arrayToCSV(array) {
+		if (array.length === 0) return ''
+
+		// Если элементы — примитивы, просто объединяем через запятую
+		if (typeof array[0] !== 'object' || array[0] === null) {
+			return array
+				.map(item => `"${String(item).replace(/"/g, '""')}"`)
+				.join(',')
+		}
+
+		// Для массивов объектов собираем все возможные ключи
+		const allKeys = Array.from(
+			array.reduce((keys, item) => {
+				if (item && typeof item === 'object') {
+					Object.keys(item).forEach(key => keys.add(key))
+				}
+				return keys
+			}, new Set())
+		)
+
+		// Заголовки CSV
+		const headers = allKeys.join(',')
+		const rows = array.map(item => {
+			if (!item || typeof item !== 'object') return ''
+			return allKeys
+				.map(key => {
+					const value = item[key]
+					return formatCSVValue(value)
+				})
+				.join(',')
+		})
+
+		return [headers, ...rows].join('\n')
+	}
+
+	// Обрабатывает одиночный объект (ключи -> заголовки, значения -> строка)
+	function objectToCSV(obj) {
+		const keys = Object.keys(obj)
+		const headers = keys.join(',')
+		const row = keys.map(key => formatCSVValue(obj[key])).join(',')
+		return [headers, row].join('\n')
+	}
+
+	// Экранирует значение для CSV
+	function formatCSVValue(value) {
+		if (value === null || value === undefined) return ''
+		if (typeof value === 'object') {
+			// Вложенные объекты/массивы преобразуем в JSON-строку
+			return `"${JSON.stringify(value).replace(/"/g, '""')}"`
+		}
+		// Экранируем кавычки и оборачиваем строки в ""
+		return `"${String(value).replace(/"/g, '""')}"`
+	}
+
+	// Пример использования:
+	// downloadCSV([{ name: "John", age: 30 }, { name: "Alice", age: 25 }], "users.csv");
+	// Или можно передать уже готовую CSV-строку:
+	// downloadCSV("name,age\nJohn,30\nAlice,25", "users.csv");
+
 	// Добавим отображение истории путей
 	const HistoryBlock = () => (
 		<div style={{ marginTop: 20 }}>
@@ -226,7 +338,32 @@ const MapControlLayer = () => {
 			)}
 			{history.map((ways, idx) => (
 				<div key={idx} style={{ marginBottom: 8 }}>
-					Маршрут #{idx + 1}: {ways.map(w => w.points.length).join(', ')} точек
+					Маршрут #{idx + 1}:{' '}
+					{ways.map(w => {
+						const start = w.points[0]
+						const end = w.points[w.points.length - 1]
+						const res = `[${start.position.lat}, ${start.position.lng}] - [${end.position.lat}, ${end.position.lng}]`
+						return (
+							<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+								<p>{res}</p>
+								<button
+									onClick={() => {
+										downloadJSON(w)
+									}}
+								>
+									Скачать в формате JSON
+								</button>
+								<button
+									onClick={() => {
+										downloadCSV(w)
+									}}
+								>
+									Скачать в формате CSV
+								</button>
+								<p>------</p>
+							</div>
+						)
+					})}
 				</div>
 			))}
 			{history.length > 0 && (
