@@ -11,6 +11,10 @@ import {
 } from './handlers'
 import L from 'leaflet'
 import figure from '@/shared/Map/Figure'
+import AuthForm from './AuthForm'
+
+const HARDCODED_LOGIN = 'user'
+const HARDCODED_PASSWORD = '1234'
 
 const MapControlLayer = () => {
 	const map = useMap()
@@ -24,6 +28,8 @@ const MapControlLayer = () => {
 		isPolygonsVisible,
 		history
 	} = useAppSelector(state => state.figures)
+
+	const [isAuth, setIsAuth] = useState(false)
 
 	const DefaultMenu = () => {
 		return (
@@ -376,6 +382,10 @@ const MapControlLayer = () => {
 			)}
 		</div>
 	)
+
+	if (!isAuth) {
+		return <AuthForm onAuthSuccess={() => setIsAuth(true)} hardcodedLogin={HARDCODED_LOGIN} hardcodedPassword={HARDCODED_PASSWORD} />
+	}
 
 	return (
 		<>
