@@ -2,6 +2,7 @@ import { useMap } from 'react-leaflet'
 import React, { useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { figuresSlice, Point } from '@/figures.slice'
+import { v4 as uuid } from 'uuid'
 import {
 	createMultilineHandler,
 	createPolygonHandler,
@@ -249,9 +250,13 @@ const MapControlLayer = () => {
 							lat: +startPositionArray[0],
 							lng: +startPositionArray[1]
 						}
-						createGridHandler(dispatch, figures, setIsLoading, [
-							startPosition.lat
-						])
+						createGridHandler(
+							dispatch,
+							figures,
+							setIsLoading,
+							figures.find(f => f.type === 'polyline')?.points[0].position
+								.lat || 0
+						)
 					}}
 				>
 					Построить
@@ -260,6 +265,9 @@ const MapControlLayer = () => {
 					style={{ display: 'block' }}
 					onMouseDown={e => {
 						dispatch(figuresSlice.actions.setIsCreateRoute(false))
+						figures
+							.filter(f => f.type === 'polyline' || f.type === 'way')
+							.forEach(f => dispatch(figuresSlice.actions.removeFigure(f.id)))
 					}}
 				>
 					Назад
@@ -383,14 +391,37 @@ const MapControlLayer = () => {
 			)}
 			{history.map((ways, idx) => (
 				<div key={idx} style={{ marginBottom: 8 }}>
-					Маршрут #{idx + 1}:{' '}
 					{ways.map(w => {
 						const start = w.points[0]
 						const end = w.points[w.points.length - 1]
-						const res = `[${start.position.lat}, ${start.position.lng}] - [${end.position.lat}, ${end.position.lng}]`
 						return (
 							<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-								<p>{res}</p>
+								<p>
+									Маршрут #{idx + 1} ({w.date}):
+								</p>
+								<p>
+									[{start.position.lat}, {start.position.lng}] - [
+									{end.position.lat}, {end.position.lng}]`
+								</p>
+								<button
+									onClick={() => {
+										figures
+											.filter(f => f.type === 'polyline' || f.type === 'way')
+											.forEach(f =>
+												dispatch(figuresSlice.actions.removeFigure(f.id))
+											)
+										dispatch(figuresSlice.actions.addFigure(w))
+										dispatch(
+											figuresSlice.actions.addFigure({
+												type: 'polyline',
+												points: [w?.points[0], w?.points[w.points.length - 1]],
+												id: uuid()
+											})
+										)
+									}}
+								>
+									Отобразить путь
+								</button>
 								<button
 									onClick={() => {
 										downloadJSON(w)

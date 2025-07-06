@@ -41,12 +41,12 @@ const Figure = ({ figure }) => {
 	const PolylineView = () => {
 		return (
 			<>
-				{
-					<Polyline
-						positions={figure?.points.map((p: any) => p.position) || []}
-						pathOptions={{ color: 'blue' }}
-					/>
-				}
+				{/*{*/}
+				{/*	<Polyline*/}
+				{/*		positions={figure?.points.map((p: any) => p.position) || []}*/}
+				{/*		pathOptions={{ color: 'blue' }}*/}
+				{/*	/>*/}
+				{/*}*/}
 				{figure?.points.map((p: any, i: number) => (
 					<CustomMarker
 						key={p.id}

@@ -26,7 +26,7 @@ export function createGridHandler(
 	dispatch: AppDispatch,
 	figures: Figure[],
 	setIsLoader,
-	coords: number[]
+	coords: number
 ) {
 	dispatch(figuresSlice.actions.startAddingFigure('grid'))
 	setIsLoader(true)
@@ -92,14 +92,16 @@ export function createGridHandler(
 								{
 									id: uuid(),
 									type: 'way',
-									points: path
+									points: path,
+									date: new Date().toLocaleString()
 								}
 							])
 						)
 					}
 				)
 				.catch(e => {
-					if (coords[0] === 56.42158) {
+					console.log(coords)
+					if (coords === 56.42158) {
 						fetch('/calculatedWay2.json')
 							.then(res => res.json())
 							.then(data => {
@@ -122,12 +124,13 @@ export function createGridHandler(
 										{
 											points,
 											type: 'way',
-											id: uuid()
+											id: uuid(),
+											date: new Date().toLocaleString()
 										}
 									])
 								)
 							})
-					} else if (coords[0] === 55.465552) {
+					} else if (coords === 55.465552) {
 						fetch('/calculatedWay.json')
 							.then(res => res.json())
 							.then(data => {
@@ -150,7 +153,8 @@ export function createGridHandler(
 										{
 											points,
 											type: 'way',
-											id: uuid()
+											id: uuid(),
+											date: new Date().toLocaleString()
 										}
 									])
 								)

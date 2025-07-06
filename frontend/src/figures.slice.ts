@@ -24,6 +24,7 @@ export type Figure = {
 	type: FigureType
 	points: Point[]
 	isSelected?: boolean
+	date?: string
 }
 
 export interface FiguresState {
