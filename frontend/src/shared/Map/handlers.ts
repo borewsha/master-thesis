@@ -22,8 +22,13 @@ export function createPolygonHandler(dispatch: AppDispatch) {
 	dispatch(figuresSlice.actions.startAddingFigure('polygon'))
 }
 
-export function createGridHandler(dispatch: AppDispatch, figures: Figure[]) {
+export function createGridHandler(
+	dispatch: AppDispatch,
+	figures: Figure[],
+	setIsLoader
+) {
 	dispatch(figuresSlice.actions.startAddingFigure('grid'))
+	setIsLoader(true)
 	for (const f of figures) {
 		if (f.type === 'polyline') {
 			const n = 100
@@ -48,36 +53,50 @@ export function createGridHandler(dispatch: AppDispatch, figures: Figure[]) {
 				body: JSON.stringify({ pathPoints: points, gridAroundPath: newGrid })
 			})
 				.then(res => res.json())
-				.then((res: { path: { id: string; lng: number; lat: number; weight: number }[] }) => {
-					const data = res.path
-					for (let i = 0; i < newGrid.length; i++) {
-						for (let j = 0; j < newGrid[i].length; j++) {
-							newGrid[i][j].weight = -1000
-							const a = data.find((p: any) => p.id === newGrid[i][j].id)
-							if (a) {
-								newGrid[i][j].weight = a.weight
+				.then(
+					(res: {
+						path: { id: string; lng: number; lat: number; weight: number }[]
+					}) => {
+						const data = res.path
+						for (let i = 0; i < newGrid.length; i++) {
+							for (let j = 0; j < newGrid[i].length; j++) {
+								newGrid[i][j].weight = -1000
+								const a = data.find((p: any) => p.id === newGrid[i][j].id)
+								if (a) {
+									newGrid[i][j].weight = a.weight
+								}
+								newGridPoints.push(newGrid[i][j])
 							}
-							newGridPoints.push(newGrid[i][j])
 						}
+						const path =
+							aStarMaxWeight(newGrid, grid[n][n], points[points.length - 1]) ||
+							[]
+						dispatch(
+							figuresSlice.actions.addFigure({
+								id: uuid(),
+								type: 'grid',
+								points: newGridPoints
+							})
+						)
+						dispatch(
+							figuresSlice.actions.addFigure({
+								id: uuid(),
+								type: 'way',
+								points: path
+							})
+						)
+						// Добавить путь в историю
+						dispatch(
+							figuresSlice.actions.addWayToHistory([
+								{
+									id: uuid(),
+									type: 'way',
+									points: path
+								}
+							])
+						)
 					}
-					const path = aStarMaxWeight(newGrid, grid[n][n], points[points.length - 1]) || []
-					dispatch(figuresSlice.actions.addFigure({
-						id: uuid(),
-						type: 'grid',
-						points: newGridPoints
-					}))
-					dispatch(figuresSlice.actions.addFigure({
-						id: uuid(),
-						type: 'way',
-						points: path
-					}))
-					// Добавить путь в историю
-					dispatch(figuresSlice.actions.addWayToHistory([{
-						id: uuid(),
-						type: 'way',
-						points: path
-					}]))
-				})
+				)
 				.catch(e => {
 					fetch('/calculatedWay.json')
 						.then(res => res.json())
@@ -88,20 +107,27 @@ export function createGridHandler(dispatch: AppDispatch, figures: Figure[]) {
 									lng: p.Longitude
 								}
 							}))
-							dispatch(figuresSlice.actions.addFigure({
-								points,
-								type: 'way',
-								id: '1'
-							}))
-							// Добавить путь в историю (fallback)
-							dispatch(figuresSlice.actions.addWayToHistory([
-								{
+							dispatch(
+								figuresSlice.actions.addFigure({
 									points,
 									type: 'way',
 									id: '1'
-								}
-							]))
+								})
+							)
+							// Добавить путь в историю (fallback)
+							dispatch(
+								figuresSlice.actions.addWayToHistory([
+									{
+										points,
+										type: 'way',
+										id: '1'
+									}
+								])
+							)
 						})
+				})
+				.finally(() => {
+					setIsLoader(false)
 				})
 			const newGridWay = getGridPerimeter(newGrid)
 		}

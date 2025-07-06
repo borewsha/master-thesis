@@ -30,6 +30,37 @@ const MapControlLayer = () => {
 	} = useAppSelector(state => state.figures)
 
 	const [isAuth, setIsAuth] = useState(false)
+	const [isLoading, setIsLoading] = useState(false)
+
+	const Loader = () => {
+		return (
+			<div
+				style={{
+					position: 'fixed',
+					height: '100vh',
+					width: '100vw',
+					zIndex: 3000,
+					backgroundColor: 'rgba(255, 255, 255, 0.5)',
+					top: 0,
+					left: 0,
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center'
+				}}
+			>
+				<div
+					style={{
+						backgroundColor: '#fff',
+						padding: '12px 24px',
+						borderRadius: 8,
+						fontSize: 24
+					}}
+				>
+					Построение пути...
+				</div>
+			</div>
+		)
+	}
 
 	const DefaultMenu = () => {
 		return (
@@ -206,7 +237,7 @@ const MapControlLayer = () => {
 						dispatch(figuresSlice.actions.saveCurrentFigure())
 					}}
 					onMouseUp={() => {
-						createGridHandler(dispatch, figures)
+						createGridHandler(dispatch, figures, setIsLoading)
 					}}
 				>
 					Построить
@@ -330,12 +361,6 @@ const MapControlLayer = () => {
 		return `"${String(value).replace(/"/g, '""')}"`
 	}
 
-	// Пример использования:
-	// downloadCSV([{ name: "John", age: 30 }, { name: "Alice", age: 25 }], "users.csv");
-	// Или можно передать уже готовую CSV-строку:
-	// downloadCSV("name,age\nJohn,30\nAlice,25", "users.csv");
-
-	// Добавим отображение истории путей
 	const HistoryBlock = () => (
 		<div style={{ marginTop: 20 }}>
 			<h4>История маршрутов</h4>
@@ -384,25 +409,18 @@ const MapControlLayer = () => {
 	)
 
 	if (!isAuth) {
-		return <AuthForm onAuthSuccess={() => setIsAuth(true)} hardcodedLogin={HARDCODED_LOGIN} hardcodedPassword={HARDCODED_PASSWORD} />
+		return (
+			<AuthForm
+				onAuthSuccess={() => setIsAuth(true)}
+				hardcodedLogin={HARDCODED_LOGIN}
+				hardcodedPassword={HARDCODED_PASSWORD}
+			/>
+		)
 	}
 
 	return (
 		<>
-			{(isEditMap || isCreateRoute) && (
-				<div
-					style={{
-						position: 'fixed',
-						top: 0,
-						left: 0,
-						width: '100vw',
-						height: '100vh',
-						zIndex: 999,
-						pointerEvents: 'auto',
-						background: 'transparent'
-					}}
-				/>
-			)}
+			{isLoading && <Loader />}
 			<div
 				style={{
 					backgroundColor: 'rgba(255,255,255,0.98)',
