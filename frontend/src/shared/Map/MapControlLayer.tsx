@@ -1,17 +1,14 @@
 import { useMap } from 'react-leaflet'
 import React, { useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { figuresSlice, Point } from '@/figures.slice'
+import { figuresSlice } from '@/figures.slice'
 import { v4 as uuid } from 'uuid'
 import {
-	createMultilineHandler,
-	createPolygonHandler,
+	cancelHandler,
 	createGridHandler,
-	saveHandler,
-	cancelHandler
+	createPolygonHandler
 } from './handlers'
 import L from 'leaflet'
-import figure from '@/shared/Map/Figure'
 import AuthForm from './AuthForm'
 
 const HARDCODED_LOGIN = 'user'
@@ -244,12 +241,6 @@ const MapControlLayer = () => {
 						dispatch(figuresSlice.actions.saveCurrentFigure())
 					}}
 					onMouseUp={() => {
-						const startPositionArray = startInput.trim().split(',')
-						console.log('startPositionArray', startPositionArray)
-						const startPosition = {
-							lat: +startPositionArray[0],
-							lng: +startPositionArray[1]
-						}
 						createGridHandler(
 							dispatch,
 							figures,
@@ -445,7 +436,12 @@ const MapControlLayer = () => {
 			{history.length > 0 && (
 				<button
 					style={{ marginTop: 8 }}
-					onClick={() => dispatch(figuresSlice.actions.clearHistory())}
+					onClick={() => {
+						dispatch(figuresSlice.actions.clearHistory())
+						figures
+							.filter(f => f.type === 'polyline' || f.type === 'way')
+							.forEach(f => dispatch(figuresSlice.actions.removeFigure(f.id)))
+					}}
 				>
 					Очистить историю
 				</button>

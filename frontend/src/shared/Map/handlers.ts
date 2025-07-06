@@ -48,6 +48,7 @@ export function createGridHandler(
 			}))
 			const newGrid = createExpandedGrid(grid, points)
 			const newGridPoints: Point[] = []
+			setTimeout(() => {}, 4000)
 			fetch('http://localhost:8000/process_data', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
