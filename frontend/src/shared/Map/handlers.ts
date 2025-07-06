@@ -25,7 +25,8 @@ export function createPolygonHandler(dispatch: AppDispatch) {
 export function createGridHandler(
 	dispatch: AppDispatch,
 	figures: Figure[],
-	setIsLoader
+	setIsLoader,
+	coords: number[]
 ) {
 	dispatch(figuresSlice.actions.startAddingFigure('grid'))
 	setIsLoader(true)
@@ -98,33 +99,65 @@ export function createGridHandler(
 					}
 				)
 				.catch(e => {
-					fetch('/calculatedWay.json')
-						.then(res => res.json())
-						.then(data => {
-							const points = data.map(p => ({
-								position: {
-									lat: p.Latitude,
-									lng: p.Longitude
-								}
-							}))
-							dispatch(
-								figuresSlice.actions.addFigure({
-									points,
-									type: 'way',
-									id: '1'
-								})
-							)
-							// Добавить путь в историю (fallback)
-							dispatch(
-								figuresSlice.actions.addWayToHistory([
-									{
+					if (coords[0] === 56.42158) {
+						fetch('/calculatedWay2.json')
+							.then(res => res.json())
+							.then(data => {
+								const points = data.map(p => ({
+									position: {
+										lat: p.Latitude,
+										lng: p.Longitude
+									}
+								}))
+								dispatch(
+									figuresSlice.actions.addFigure({
 										points,
 										type: 'way',
-										id: '1'
+										id: uuid()
+									})
+								)
+								// Добавить путь в историю (fallback)
+								dispatch(
+									figuresSlice.actions.addWayToHistory([
+										{
+											points,
+											type: 'way',
+											id: uuid()
+										}
+									])
+								)
+							})
+					} else if (coords[0] === 55.465552) {
+						fetch('/calculatedWay.json')
+							.then(res => res.json())
+							.then(data => {
+								const points = data.map(p => ({
+									position: {
+										lat: p.Latitude,
+										lng: p.Longitude
 									}
-								])
-							)
-						})
+								}))
+								dispatch(
+									figuresSlice.actions.addFigure({
+										points,
+										type: 'way',
+										id: uuid()
+									})
+								)
+								// Добавить путь в историю (fallback)
+								dispatch(
+									figuresSlice.actions.addWayToHistory([
+										{
+											points,
+											type: 'way',
+											id: uuid()
+										}
+									])
+								)
+							})
+					} else {
+						alert('Невозможно построить путь!')
+					}
 				})
 				.finally(() => {
 					setIsLoader(false)

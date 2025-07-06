@@ -210,6 +210,12 @@ const MapControlLayer = () => {
 				/>
 				<button
 					onMouseDown={() => {
+						const figForRemove = figures.filter(
+							f => f.type === 'polyline' || f.type === 'way'
+						)
+						figForRemove.forEach(f => {
+							dispatch(figuresSlice.actions.removeFigure(f.id))
+						})
 						const startPositionArray = startInput.trim().split(',')
 						console.log('startPositionArray', startPositionArray)
 						const startPosition = {
@@ -237,7 +243,15 @@ const MapControlLayer = () => {
 						dispatch(figuresSlice.actions.saveCurrentFigure())
 					}}
 					onMouseUp={() => {
-						createGridHandler(dispatch, figures, setIsLoading)
+						const startPositionArray = startInput.trim().split(',')
+						console.log('startPositionArray', startPositionArray)
+						const startPosition = {
+							lat: +startPositionArray[0],
+							lng: +startPositionArray[1]
+						}
+						createGridHandler(dispatch, figures, setIsLoading, [
+							startPosition.lat
+						])
 					}}
 				>
 					Построить
